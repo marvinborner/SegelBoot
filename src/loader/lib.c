@@ -1,0 +1,85 @@
+// MIT License, Copyright (c) 2021 Marvin Borner
+
+#include <lib.h>
+
+/**
+ * Common string functions
+ */
+
+u32 strlen(const char *str)
+{
+	const char *s = str;
+	while (*s)
+		s++;
+	return s - str;
+}
+
+u32 strnlen(const char *str, u32 max)
+{
+	const char *s = str;
+	while (max && *s) {
+		s++;
+		max--;
+	}
+	return s - str;
+}
+
+u32 strlcpy(char *dst, const char *src, u32 size)
+{
+	const char *orig = src;
+	u32 left = size;
+
+	if (left)
+		while (--left)
+			if (!(*dst++ = *src++))
+				break;
+
+	if (!left) {
+		if (size)
+			*dst = 0;
+		while (*src++)
+			;
+	}
+
+	return src - orig - 1;
+}
+
+/**
+ * Conversion
+ */
+
+int itoa(s32 value, char *buffer, u32 base)
+{
+	char tmp[16];
+	char *tp = tmp;
+	int i;
+	unsigned v;
+
+	int sign = (base == 10 && value < 0);
+	if (sign)
+		v = -value;
+	else
+		v = (unsigned)value;
+
+	while (v || tp == tmp) {
+		i = v % base;
+		v /= base;
+		if (i < 10)
+			*tp++ = i + '0';
+		else
+			*tp++ = i + 'a' - 10;
+	}
+
+	int len = tp - tmp;
+
+	if (sign) {
+		*buffer++ = '-';
+		len++;
+	}
+
+	while (tp > tmp)
+		*buffer++ = *--tp;
+	*buffer = '\0';
+
+	return len;
+}
