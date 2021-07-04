@@ -1,6 +1,7 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
 #include <def.h>
+#include <ide.h>
 #include <log.h>
 
 /**
@@ -10,8 +11,12 @@
 int start(void);
 int start(void)
 {
+	vga_clear();
 	serial_install();
-	log("Hello %d\n", 42);
+
+	log("Log initiated\n");
+
+	ata_install();
 
 	while (1)
 		;

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <cpu.h>
 #include <lib.h>
 #include <log.h>
@@ -62,33 +63,88 @@ static u32 vsnprintf(char *str, u32 size, const char *format, va_list ap)
  * Serial
  */
 
+#define PORT 0x3f8
+
 void serial_install(void)
 {
-	outb(0x3f8 + 1, 0x00);
-	outb(0x3f8 + 3, 0x80);
-	outb(0x3f8 + 0, 0x03);
-	outb(0x3f8 + 1, 0x00);
-	outb(0x3f8 + 3, 0x03);
-	outb(0x3f8 + 2, 0xc7);
-	outb(0x3f8 + 4, 0x0B);
+	outb(PORT + 1, 0x00);
+	outb(PORT + 3, 0x80);
+	outb(PORT + 0, 0x03);
+	outb(PORT + 1, 0x00);
+	outb(PORT + 3, 0x03);
+	outb(PORT + 2, 0xc7);
+
+	// Test serial chip
+	outb(PORT + 4, 0x1e); // Enable loopback
+	outb(PORT + 0, 0xae); // Write
+	assert(inb(PORT + 0) == 0xae); // Verify receive
+
+	// Activate
+	outb(PORT + 4, 0x0f);
 }
 
-static int is_transmit_empty(void)
+static int serial_empty(void)
 {
-	return inb(0x3f8 + 5) & 0x20;
+	return inb(PORT + 5) & 0x20;
 }
 
 static void serial_put(char ch)
 {
-	while (is_transmit_empty() == 0)
+	while (serial_empty() == 0)
 		;
-	outb(0x3f8, (u8)ch);
+	outb(PORT, (u8)ch);
 }
 
 void serial_print(const char *data)
 {
 	for (const char *p = data; *p; p++)
 		serial_put(*p);
+}
+
+/**
+ * VGA
+ */
+
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 25
+#define VGA_ADDRESS 0xb8000
+
+void vga_clear(void)
+{
+	u16 *out = (u16 *)VGA_ADDRESS;
+	for (u16 i = 0; i < 80 * 25; i++)
+		out[i] = 0;
+}
+
+static void vga_put(char ch)
+{
+	static u8 x = 0;
+	static u8 y = 0;
+
+	if (ch == '\n') {
+		x = 0;
+		y++;
+		return;
+	} else if (x + 1 == VGA_WIDTH) {
+		x = 0;
+		y++;
+	} else if (y + 1 == VGA_HEIGHT) {
+		x = 0;
+		y = 0;
+		vga_clear();
+	}
+
+	u8 *out = (u8 *)(VGA_ADDRESS + 2 * (x + y * VGA_WIDTH));
+	*out++ = ch;
+	*out++ = 0x07;
+
+	x++;
+}
+
+static void vga_print(const char *data)
+{
+	for (const char *p = data; *p; p++)
+		vga_put(*p);
 }
 
 /**
@@ -105,4 +161,5 @@ void log(const char *format, ...)
 	va_end(ap);
 
 	serial_print(buf);
+	vga_print(buf);
 }
