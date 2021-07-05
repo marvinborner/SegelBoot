@@ -1,7 +1,7 @@
-#include <assert.h>
 #include <cpu.h>
 #include <lib.h>
 #include <log.h>
+#include <pnc.h>
 
 /**
  * Formatting

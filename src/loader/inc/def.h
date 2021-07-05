@@ -22,6 +22,7 @@ typedef __builtin_va_list va_list;
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define ABS(a) (((a) < 0) ? -(a) : (a))
+#define COUNT(a) (sizeof(a) / sizeof 0 [a])
 
 #define PACKED __attribute__((packed))
 

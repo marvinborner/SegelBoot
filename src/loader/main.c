@@ -1,12 +1,14 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
 #include <def.h>
+#include <dev.h>
 #include <ide.h>
 #include <log.h>
 
 /**
  * Entry
  */
+#include <pnc.h>
 
 int start(void);
 int start(void)
@@ -17,6 +19,8 @@ int start(void)
 	log("Log initiated\n");
 
 	ata_install();
+
+	dev_print();
 
 	while (1)
 		;
