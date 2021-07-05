@@ -7,8 +7,8 @@ OC = $(PWD)/cross/opt/bin/i686-elf-objcopy
 ST = $(PWD)/cross/opt/bin/i686-elf-strip
 AS = nasm
 
-BLD = $(PWD)/build/
-SRC = $(PWD)/src/
+BLD = $(PWD)/build
+SRC = $(PWD)/src
 
 SRCS = $(wildcard $(SRC)/loader/*.c)
 OBJS = $(patsubst $(SRC)/%.c,$(BLD)/%.o,$(SRCS))

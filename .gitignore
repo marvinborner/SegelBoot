@@ -1,6 +1,9 @@
 cross/
 build/
 
+compile_commands.json
+tags
+
 *.o
 *.bin
 *.img
