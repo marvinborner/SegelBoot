@@ -81,6 +81,8 @@ void serial_install(void)
 
 	// Activate
 	outb(PORT + 4, 0x0f);
+
+	log("[LOG] Initiated\n");
 }
 
 static int serial_empty(void)

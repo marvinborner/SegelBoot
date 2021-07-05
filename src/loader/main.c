@@ -17,8 +17,6 @@ int start(void)
 	vga_clear();
 	serial_install();
 
-	log("Log initiated\n");
-
 	pci_probe();
 	dev_print();
 

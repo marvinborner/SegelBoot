@@ -4,7 +4,7 @@
 #define DEV_H
 
 #include <def.h>
-#include <fs.h>
+#include <dsk.h>
 
 enum dev_type {
 	DEV_DISK,
@@ -22,7 +22,6 @@ struct dev {
 	struct fs fs;
 
 	u32 data; // Optional (device-specific) data/information
-	u8 exists : 1;
 };
 
 struct dev *dev_get(u8 id);

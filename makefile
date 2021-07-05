@@ -10,7 +10,7 @@ AS = nasm
 BLD = $(PWD)/build
 SRC = $(PWD)/src
 
-SRCS = $(wildcard $(SRC)/loader/*.c)
+SRCS = $(shell find $(SRC)/loader/ -type f -name "*.c")
 OBJS = $(patsubst $(SRC)/%.c,$(BLD)/%.o,$(SRCS))
 
 # Enable many warnings for less bugs :)
@@ -25,7 +25,7 @@ all: dir $(BLD)/boot.bin
 
 dir:
 	@mkdir -p $(BLD)/entry/
-	@mkdir -p $(BLD)/loader/
+	@mkdir -p $(BLD)/loader/fs/
 
 $(BLD)/boot.bin: $(BLD)/loader.bin
 	@$(AS) -f bin $(SRC)/entry/bootsector.asm -o $@

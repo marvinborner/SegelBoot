@@ -44,6 +44,22 @@ u32 strlcpy(char *dst, const char *src, u32 size)
 	return src - orig - 1;
 }
 
+s32 strncmp(const char *s1, const char *s2, u32 n)
+{
+	const u8 *c1 = (const u8 *)s1;
+	const u8 *c2 = (const u8 *)s2;
+	u8 ch;
+	int d = 0;
+
+	while (n--) {
+		d = (int)(ch = *c1++) - (int)*c2++;
+		if (d || !ch)
+			break;
+	}
+
+	return d;
+}
+
 /**
  * Common memory functions
  */

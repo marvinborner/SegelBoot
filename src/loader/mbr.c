@@ -47,11 +47,12 @@ u8 mbr_detect(struct dev *dev)
 		strlcpy(name, dev->name, sizeof(name));
 		name[3] = '0' + i;
 
+		log("[MBR] Found part %s\n", name);
+
 		// Saving space and everything
 		u16 data = mbr_add_entry(entry) | (dev->id << 8);
 
 		dev_register(DEV_DISK, name, data, mbr_read, NULL);
-		log("Found part %s%c\n", dev->name, '0' + i);
 	}
 
 	return 1;
