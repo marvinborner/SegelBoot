@@ -139,6 +139,7 @@ dap: ; Disk Address Packet
 	dd 0 ; More storage bytes
 
 ; Global Descriptor Table (GDT)
+; There are better explanations for the constants in definitions.asm
 gdt:
 	dw .size - 1 + 8 ; GDT size
 	dd .start - 8 ; GDT start address
@@ -147,16 +148,16 @@ gdt:
 	dw 0xffff ; Limit
 	dw 0x0000 ; Base (low 16 bits)
 	db 0x00 ; Base (mid 8 bits)
-	db 10011010b ; Access
-	db 11001111b ; Granularity
+	db GDT_PRESENT | GDT_DESCRIPTOR | GDT_EXECUTABLE | GDT_READWRITE ; Access
+	db GDT_GRANULARITY | GDT_SIZE | 0xf ; Granularity
 	db 0x00 ; Base (high 8 bits)
 
 	; Data
 	dw 0xffff ; Limit
 	dw 0x0000 ; Base (low 16 bits)
 	db 0x00 ; Base (mid 8 bits)
-	db 10010010b ; Access
-	db 11001111b ; Granularity
+	db GDT_PRESENT | GDT_DESCRIPTOR | GDT_READWRITE ; Access; Data isn't executable
+	db GDT_GRANULARITY | GDT_SIZE | 0xf ; Granularity
 	db 0x00 ; Base (high 8 bits)
 .end:
 .size: equ .end - .start

@@ -24,3 +24,15 @@
 %define DISK_EXT_CHECK_REQ 0x55aa ; First extension check signature (request)
 %define DISK_EXT_CHECK_RESP 0xaa55 ; Second extension check signature (response)
 %define DISK_READ 0x42 ; Disk extended read command
+
+; GDT constants (bitmap)
+%define GDT_MAX_LIMIT 0xffff ; I just use the max limit lel
+%define GDT_PRESENT 0b10000000 ; Is present
+%define GDT_RING3 0b01100000 ; Privilege level 3
+%define GDT_DESCRIPTOR 0b00010000 ; Descriptor type, set for code/data
+%define GDT_EXECUTABLE 0b00001000 ; Can be executed
+%define GDT_READWRITE 0b00000010 ; Read/write access for code/data
+%define GDT_ACCESSED 0b00000001 ; Whether segment is accessible
+%define GDT_GRANULARITY 0x80 ; Page granularity (4KiB)
+%define GDT_SIZE 0x40 ; Use 32 bit selectors
+%define GDT_DATA_OFFSET 0x10 ; Offset to GDT data segment
