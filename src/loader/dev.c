@@ -2,6 +2,7 @@
 // Device manager
 
 #include <dev.h>
+#include <fs.h>
 #include <lib.h>
 #include <pnc.h>
 
@@ -19,11 +20,18 @@ static const char *dev_resolve_type(enum dev_type type)
 	}
 }
 
-u32 dev_register(enum dev_type type, char *name, u32 data,
-		 s32 (*read)(void *, u32, u32, struct dev *),
-		 s32 (*write)(const void *, u32, u32, struct dev *))
+struct dev *dev_get(u8 id)
+{
+	assert(id < COUNT(devices));
+	return &devices[id];
+}
+
+u8 dev_register(enum dev_type type, char *name, u32 data,
+		s32 (*read)(void *, u32, u32, struct dev *),
+		s32 (*write)(const void *, u32, u32, struct dev *))
 {
 	static u8 id = 0;
+	assert(id + 1 < 0xff);
 
 	struct dev *dev = &devices[id];
 	dev->id = id;
@@ -35,6 +43,9 @@ u32 dev_register(enum dev_type type, char *name, u32 data,
 
 	assert(strlen(name) < sizeof(dev->name));
 	memcpy(dev->name, name, sizeof(dev->name));
+
+	if (type == DEV_DISK)
+		fs_detect(dev);
 
 	return id++;
 }

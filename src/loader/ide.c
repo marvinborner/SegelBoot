@@ -111,6 +111,8 @@ static void ata_probe(void)
 		char name[4] = { 0 };
 		strlcpy(name, "hd", sizeof(name));
 		name[2] = 'a' + i;
+
+		// Register without write support
 		dev_register(DEV_DISK, name, data, ata_read, NULL);
 	}
 }

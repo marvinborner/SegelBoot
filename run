@@ -87,7 +87,10 @@ build() {
     PART="p1"
     $SUDO parted -s "$DEV" mklabel msdos mkpart primary ext2 32k 100% -a minimal set 1 boot on
     $SUDO mke2fs -b 1024 -q "$DEV$PART"
-    $SUDO dd if=build/boot.bin of="$DEV" conv=notrunc status=none
+
+    # Write bootsector but jump over partition table (at 440 to 510)
+    $SUDO dd if=build/boot.bin of="$DEV" bs=1 count=440 conv=notrunc status=none
+    $SUDO dd if=build/boot.bin of="$DEV" bs=1 skip=510 seek=510 conv=notrunc status=none
 
     # Mount disk and copy files
     #mkdir -p mnt/

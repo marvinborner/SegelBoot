@@ -4,6 +4,7 @@
 #include <dev.h>
 #include <ide.h>
 #include <log.h>
+#include <pci.h>
 
 /**
  * Entry
@@ -18,8 +19,7 @@ int start(void)
 
 	log("Log initiated\n");
 
-	ata_install();
-
+	pci_probe();
 	dev_print();
 
 	while (1)

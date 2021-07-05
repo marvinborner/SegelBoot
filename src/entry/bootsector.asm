@@ -9,7 +9,6 @@ org LOCATION ; Bootsector location
 global _start
 _start:
 	jmp .skip_bpb ; Some BIOSes override the BPB area
-	dd "START"
 	nop
 	times 87 db 0 ; Fill BPB area with 0
 .skip_bpb:
@@ -161,6 +160,9 @@ gdt:
 	db 0x00 ; Base (high 8 bits)
 .end:
 .size: equ .end - .start
+
+; The partition table gets inserted here (0x1b8 -> @440B)
+times 0x1b8 - ($ - $$) db 0
 
 times SECTOR_SIZE - 2 - ($ - $$) db 0 ; Fill until 512 (SECTOR_SIZE) - 2 bytes; -2 because of 2B signature
 dw SECTOR_END_SIG ; Bootsector end signature
