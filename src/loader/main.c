@@ -1,5 +1,7 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
+#include <acpi.h>
+#include <cfg.h>
 #include <def.h>
 #include <dev.h>
 #include <ide.h>
@@ -21,8 +23,12 @@ int start(void)
 	pic_install();
 	idt_install();
 
+	acpi_probe();
 	pci_probe();
 	dev_print();
+
+	cfg_exec();
+	cfg_print();
 
 	// Sleep and wait for interrupts
 	while (1)

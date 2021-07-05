@@ -49,10 +49,10 @@ s32 strncmp(const char *s1, const char *s2, u32 n)
 	const u8 *c1 = (const u8 *)s1;
 	const u8 *c2 = (const u8 *)s2;
 	u8 ch;
-	int d = 0;
+	s32 d = 0;
 
 	while (n--) {
-		d = (int)(ch = *c1++) - (int)*c2++;
+		d = (s32)(ch = *c1++) - (s32)*c2++;
 		if (d || !ch)
 			break;
 	}
@@ -107,18 +107,31 @@ void *memset(void *dest, u32 val, u32 n)
 	return dest;
 }
 
+s32 memcmp(const void *s1, const void *s2, u32 n)
+{
+	const u8 *a = (const u8 *)s1;
+	const u8 *b = (const u8 *)s2;
+	for (u32 i = 0; i < n; i++) {
+		if (a[i] < b[i])
+			return -1;
+		else if (b[i] < a[i])
+			return 1;
+	}
+	return 0;
+}
+
 /**
  * Conversion
  */
 
-int itoa(s32 value, char *buffer, u32 base)
+s32 itoa(s32 value, char *buffer, u32 base)
 {
 	char tmp[16];
 	char *tp = tmp;
-	int i;
+	s32 i;
 	unsigned v;
 
-	int sign = (base == 10 && value < 0);
+	s32 sign = (base == 10 && value < 0);
 	if (sign)
 		v = -value;
 	else
@@ -133,7 +146,7 @@ int itoa(s32 value, char *buffer, u32 base)
 			*tp++ = i + 'a' - 10;
 	}
 
-	int len = tp - tmp;
+	s32 len = tp - tmp;
 
 	if (sign) {
 		*buffer++ = '-';
@@ -145,4 +158,15 @@ int itoa(s32 value, char *buffer, u32 base)
 	*buffer = '\0';
 
 	return len;
+}
+
+// From stackoverflow
+s32 atoi(const char *inp)
+{
+	s32 ret = 0;
+	while (*inp) {
+		ret = (ret << 3) + (ret << 1) + (*inp) - '0';
+		inp++;
+	}
+	return ret;
 }

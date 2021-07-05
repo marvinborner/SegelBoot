@@ -25,6 +25,16 @@ struct dev *dev_get(u8 id)
 	return &devices[id];
 }
 
+void dev_foreach(enum dev_type type, u8 (*cb)(struct dev *))
+{
+	for (u8 i = 0; i < COUNT(devices); i++) {
+		struct dev *dev = &devices[i];
+		if (dev->type == type)
+			if (cb(dev))
+				break;
+	}
+}
+
 u8 dev_register(enum dev_type type, char *name, u32 data,
 		s32 (*read)(void *, u32, u32, struct dev *),
 		s32 (*write)(const void *, u32, u32, struct dev *))

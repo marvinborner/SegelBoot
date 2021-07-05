@@ -32,6 +32,7 @@ all: dir $(BLD)/boot.bin
 dir:
 	@mkdir -p $(BLD)/entry/
 	@mkdir -p $(BLD)/loader/fs/
+	@mkdir -p $(BLD)/loader/impl/
 
 $(BLD)/boot.bin: $(BLD)/loader.bin
 	@$(AS) $(ASFLAGS) -f bin $(SRC)/entry/bootsector.asm -o $@

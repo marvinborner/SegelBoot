@@ -134,7 +134,7 @@ static u32 ext2_find_inode(const char *name, u32 dir_inode, struct dev *dev)
 		}
 		d = (struct ext2_dirent *)((u32)d + d->total_len);
 
-	} while (sum < (1024 * i.blocks / 2));
+	} while (sum < (BLOCK_SIZE * i.blocks / 2));
 
 	return (unsigned)-1;
 }

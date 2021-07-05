@@ -93,11 +93,12 @@ build() {
     $SUDO dd if=build/boot.bin of="$DEV" bs=1 skip=510 seek=510 conv=notrunc status=none
 
     # Mount disk and copy files
-    #mkdir -p mnt/
-    #$SUDO mount "$DEV$PART" mnt/
-    #$SUDO mkdir -p mnt/boot/
-    #$SUDO umount mnt/ || (sync && $SUDO umount mnt/)
-    #rm -rf mnt/
+    mkdir -p mnt/
+    $SUDO mount "$DEV$PART" mnt/
+    $SUDO mkdir -p mnt/boot/
+    $SUDO cp example/segelboot.cfg mnt/boot/
+    $SUDO umount mnt/ || (sync && $SUDO umount mnt/)
+    rm -rf mnt/
 
     $SUDO losetup -d "$DEV"
 }

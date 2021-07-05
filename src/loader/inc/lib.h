@@ -12,7 +12,9 @@ s32 strncmp(const char *s1, const char *s2, u32 n);
 
 void *memcpy(void *dest, const void *src, u32 n);
 void *memset(void *dest, u32 val, u32 n);
+s32 memcmp(const void *s1, const void *s2, u32 n);
 
-int itoa(s32 value, char *buffer, u32 base);
+s32 itoa(s32 value, char *buffer, u32 base);
+s32 atoi(const char *inp);
 
 #endif
