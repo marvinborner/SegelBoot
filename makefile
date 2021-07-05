@@ -1,4 +1,5 @@
 # MIT License, Copyright (c) 2021 Marvin Borner
+# It's not as complicated as it looks
 
 # Obviously needs cross compiler
 CC = $(PWD)/cross/opt/bin/i686-elf-gcc
@@ -10,8 +11,13 @@ AS = nasm
 BLD = $(PWD)/build
 SRC = $(PWD)/src
 
-SRCS = $(shell find $(SRC)/loader/ -type f -name "*.c")
-OBJS = $(patsubst $(SRC)/%.c,$(BLD)/%.o,$(SRCS))
+# C code
+CSRCS = $(shell find $(SRC)/loader/ -type f -name "*.c")
+COBJS = $(patsubst $(SRC)/%.c,$(BLD)/%_c.o,$(CSRCS))
+
+# Assembly code
+ASRCS = $(shell find $(SRC)/loader/ -type f -name "*.asm")
+AOBJS = $(patsubst $(SRC)/%.asm,$(BLD)/%_asm.o,$(ASRCS))
 
 # Enable many warnings for less bugs :)
 WARNINGS = -Wall -Wextra -Wshadow -Wpointer-arith -Wwrite-strings -Wredundant-decls -Wnested-externs -Wformat=2 -Wmissing-declarations -Wstrict-prototypes -Wmissing-prototypes -Wcast-qual -Wswitch-default -Wswitch-enum -Wunreachable-code -Wundef -Wold-style-definition -Wvla -pedantic-errors
@@ -28,16 +34,19 @@ dir:
 	@mkdir -p $(BLD)/loader/fs/
 
 $(BLD)/boot.bin: $(BLD)/loader.bin
-	@$(AS) -f bin $(SRC)/entry/bootsector.asm -o $@
+	@$(AS) $(ASFLAGS) -f bin $(SRC)/entry/bootsector.asm -o $@
 
-$(BLD)/loader.o: $(OBJS)
+$(BLD)/loader.o: $(COBJS) $(AOBJS)
 	@$(LD) -N -z max-page-size=0x1000 -estart -T$(SRC)/loader/link.ld -o $@ $^
 
 $(BLD)/loader.bin: $(BLD)/loader.o
 	@$(OC) -O binary $^ $@
 
-$(OBJS): $(BLD)/%.o : $(SRC)/%.c
+$(COBJS): $(BLD)/%_c.o : $(SRC)/%.c
 	@$(CC) -c $(CFLAGS) $< -o $@
+
+$(AOBJS): $(BLD)/%_asm.o : $(SRC)/%.asm
+	@$(AS) $(ASFLAGS) $< -o $@
 
 clean:
 	@rm -rf $(BLD)/*
