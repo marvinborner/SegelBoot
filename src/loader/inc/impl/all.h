@@ -11,9 +11,11 @@ enum impl_type {
 	IMPL_MB2,
 };
 
+struct dev;
 struct impl {
 	enum impl_type type;
 	void *start; // Of header/entry
+	void (*load)(struct dev *, const char *);
 };
 
 #include <dev.h>

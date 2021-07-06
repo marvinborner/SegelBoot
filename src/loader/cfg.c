@@ -10,16 +10,8 @@
 #define TIMEOUT "TIMEOUT"
 #define PATH "PATH"
 
-// Config struct (gettable using cfg_get)
-struct {
-	u32 timeout;
-	struct {
-		u8 exists : 1;
-		char name[64];
-		char path[64];
-		struct dev *dev;
-	} elem[16]; // Up to 16 different selections
-} cfg = { 0 };
+// Config structure
+static struct cfg cfg = { 0 };
 
 // Config file contents (if found)
 static char file[1024] = { 0 };
@@ -38,29 +30,30 @@ static u8 cfg_find(struct dev *dev)
 	return 0;
 }
 
-// Checks if index is appropriate as some key/value need to be in element
-static void cfg_in_element(u8 index)
+// Checks if index is appropriate as some key/value need to be in entry
+static void cfg_in_entry(u8 index)
 {
 	if (index == 0xff)
-		panic("No element name given\n");
+		panic("No entry name given\n");
 }
 
-// Add/overwrite value by key and element index
+// Add/overwrite value by key and entry index
 static void cfg_add(u8 index, enum cfg_key key, const char *value)
 {
-	cfg.elem[index].exists = 1;
+	struct cfg_entry *entry = &cfg.entry[index];
+	entry->exists = 1;
 
 	switch (key) {
 	case CFG_NAME:
-		cfg_in_element(index);
-		strlcpy(cfg.elem[index].name, value, sizeof(cfg.elem[index].name));
+		cfg_in_entry(index);
+		strlcpy(entry->name, value, sizeof(entry->name));
 		break;
 	case CFG_TIMEOUT:
 		cfg.timeout = atoi(value);
 		break;
 	case CFG_PATH:
-		cfg_in_element(index);
-		strlcpy(cfg.elem[index].path, value, sizeof(cfg.elem[index].path));
+		cfg_in_entry(index);
+		strlcpy(entry->path, value, sizeof(entry->path));
 		break;
 	case CFG_NONE:
 	default:
@@ -68,27 +61,12 @@ static void cfg_add(u8 index, enum cfg_key key, const char *value)
 	}
 }
 
-const void *cfg_get(u8 index, enum cfg_key key)
-{
-	switch (key) {
-	case CFG_NAME:
-		return &cfg.elem[index].path;
-	case CFG_TIMEOUT:
-		return &cfg.timeout;
-	case CFG_PATH:
-		return &cfg.elem[index].path;
-	case CFG_NONE:
-	default:
-		return NULL;
-	}
-}
-
 // TODO: This code is kind of messy
 // Structure per line: KEY=VALUE
 static void cfg_parse(void)
 {
-	// Element index
-	u8 elem = 0xff;
+	// Entry index
+	u8 entry = 0xff;
 
 	// Value per key
 	char value[64] = { 0 };
@@ -96,7 +74,7 @@ static void cfg_parse(void)
 
 	// States
 	enum cfg_key current = CFG_NONE; // Value key type
-	u8 state = 0; // 0 is key, 1 is value, 2 is elem
+	u8 state = 0; // 0 is key, 1 is value, 2 is entry
 
 	const char *start = file; // Start is at the beginning of the key
 	for (const char *p = start; *p; p++) {
@@ -105,7 +83,7 @@ static void cfg_parse(void)
 			if (*p == '\n') { // A key can't just end but ok
 				start = p + 1;
 			} else if (*p == '#') {
-				state = 2; // Let's parse the element name
+				state = 2; // Let's parse the entry name
 				p++;
 				continue;
 			} else if (*p != '=') {
@@ -133,7 +111,7 @@ static void cfg_parse(void)
 			assert(value_index + 1 < (u8)sizeof(value));
 			if (*p == '\n') { // Finished
 				value[value_index] = 0;
-				cfg_add(elem, current, value);
+				cfg_add(entry, current, value);
 				value_index = 0;
 				state = 0;
 				p--; // Repeat parse normally
@@ -141,12 +119,12 @@ static void cfg_parse(void)
 				value[value_index++] = *p;
 			}
 		} else if (state == 2) {
-			// We're at element name parsing
+			// We're at entry name parsing
 			assert(value_index + 1 < (u8)sizeof(value));
 			if (*p == '\n') { // Finished
-				elem = elem == 0xff ? 0 : elem + 1;
+				entry = entry == 0xff ? 0 : entry + 1;
 				value[value_index] = 0;
-				cfg_add(elem, CFG_NAME, value);
+				cfg_add(entry, CFG_NAME, value);
 				value_index = 0;
 				state = 0;
 				p--; // Repeat parse normally
@@ -170,18 +148,20 @@ static u8 cfg_path_disk(const char *path)
 // Find matching disk dev for every entry and verify path existence and readability
 static void cfg_verify(void)
 {
-	for (u8 i = 0; i < COUNT(cfg.elem) && cfg.elem[i].exists; i++) {
-		u8 len = cfg_path_disk(cfg.elem[i].path);
-		struct dev *dev = dev_get_by_name(cfg.elem[i].path, len);
+	for (u8 i = 0; i < COUNT(cfg.entry) && cfg.entry[i].exists; i++) {
+		struct cfg_entry *entry = &cfg.entry[i];
+
+		u8 len = cfg_path_disk(entry->path);
+		struct dev *dev = dev_get_by_name(entry->path, len);
 		if (!dev || dev->type != DEV_DISK)
 			panic("Invalid device in config\n");
-		cfg.elem[i].dev = dev;
+		entry->dev = dev;
 
 		if (!dev->p.disk.fs.read)
 			panic("Device fs not readable\n");
 
 		// This is now the correct path (due to "disk:PATH")
-		const char *path = &cfg.elem[i].path[len + 1];
+		const char *path = &entry->path[len + 1];
 
 		u8 buf[1] = { 0 }; // Just for existence-check
 		s32 ret = dev->p.disk.fs.read(path, buf, 0, sizeof(buf), dev);
@@ -193,16 +173,25 @@ static void cfg_verify(void)
 	}
 }
 
+// Call cb for each entry config
+void cfg_foreach(u8 (*cb)(struct cfg_entry *))
+{
+	for (u8 i = 0; i < COUNT(cfg.entry) && cfg.entry[i].exists; i++) {
+		if (cb(&cfg.entry[i])) // 1 means break
+			break;
+	}
+}
+
 // Print all configs and entry values
 static void cfg_print(void)
 {
 	log("[CFG] Global: %d\n", cfg.timeout);
 
-	for (u8 i = 0; i < COUNT(cfg.elem) && cfg.elem[i].exists; i++)
-		log("[CFG] Element: %s at %s\n", cfg.elem[i].name, cfg.elem[i].path);
+	for (u8 i = 0; i < COUNT(cfg.entry) && cfg.entry[i].exists; i++)
+		log("[CFG] Entry: %s at %s\n", cfg.entry[i].name, cfg.entry[i].path);
 }
 
-void cfg_exec(void)
+void cfg_read(void)
 {
 	dev_foreach(DEV_DISK, &cfg_find);
 	if (!file[0])

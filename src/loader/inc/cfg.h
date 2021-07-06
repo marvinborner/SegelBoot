@@ -15,7 +15,19 @@ enum cfg_key {
 	CFG_PATH,
 };
 
-const void *cfg_get(u8 index, enum cfg_key key);
-void cfg_exec(void);
+struct cfg_entry {
+	u8 exists : 1;
+	char name[64];
+	char path[64];
+	struct dev *dev;
+};
+
+struct cfg {
+	u32 timeout;
+	struct cfg_entry entry[16]; // Up to 16 different entries
+};
+
+void cfg_foreach(u8 (*cb)(struct cfg_entry *));
+void cfg_read(void);
 
 #endif

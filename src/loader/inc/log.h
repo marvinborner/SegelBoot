@@ -9,5 +9,6 @@ void serial_print(const char *data);
 void vga_clear(void);
 
 void log(const char *format, ...);
+void vga_log(const char *format, ...);
 
 #endif

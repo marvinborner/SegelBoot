@@ -9,6 +9,7 @@
 #include <log.h>
 #include <pci.h>
 #include <pic.h>
+#include <sel.h>
 
 /**
  * Entry
@@ -23,11 +24,12 @@ int start(void)
 	pic_install();
 	idt_install();
 
-	acpi_probe();
+	// acpi_probe(); // TODO: Fix slow ACPI probing
 	pci_probe();
 	dev_print();
 
-	cfg_exec();
+	cfg_read();
+	sel_draw();
 
 	// Sleep and wait for interrupts
 	while (1)

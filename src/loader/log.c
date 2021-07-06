@@ -150,9 +150,10 @@ static void vga_print(const char *data)
 }
 
 /**
- * Universal print function
+ * Formatted print functions
  */
 
+// Serial
 void log(const char *format, ...)
 {
 	char buf[1024] = { 0 };
@@ -163,5 +164,17 @@ void log(const char *format, ...)
 	va_end(ap);
 
 	serial_print(buf);
+}
+
+// VGA log
+void vga_log(const char *format, ...)
+{
+	char buf[1024] = { 0 };
+
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(buf, sizeof(buf), format, ap);
+	va_end(ap);
+
 	vga_print(buf);
 }
