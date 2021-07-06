@@ -10,7 +10,7 @@ static struct mbr_entry entries[16] = { 0 };
 static s32 mbr_read(void *buf, u32 lba, u32 sector_count, struct dev *part)
 {
 	u8 dev_id = (part->data & 0xff00) >> 8;
-	struct dev *dev = dev_get(dev_id);
+	struct dev *dev = dev_get_by_id(dev_id);
 	assert(dev && dev->type == DEV_DISK && dev->read);
 
 	u8 mbr_id = part->data & 0xff;

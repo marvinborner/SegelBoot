@@ -5,6 +5,7 @@
 
 #include <def.h>
 #include <dsk.h>
+#include <impl/all.h>
 
 enum dev_type {
 	DEV_DISK,
@@ -19,12 +20,19 @@ struct dev {
 	s32 (*read)(void *, u32, u32, struct dev *);
 	s32 (*write)(const void *, u32, u32, struct dev *);
 
-	struct fs fs;
+	union {
+		struct {
+			struct fs fs;
+			struct impl impl;
+		} disk;
+		// TODO: Other (framebuffer?)
+	} p; // Prototype union
 
 	u32 data; // Optional (device-specific) data/information
 };
 
-struct dev *dev_get(u8 id);
+struct dev *dev_get_by_id(u8 id);
+struct dev *dev_get_by_name(const char *name, u32 len);
 void dev_foreach(enum dev_type type, u8 (*cb)(struct dev *)); // cb=1 => break
 u8 dev_register(enum dev_type type, char *name, u32 data,
 		s32 (*read)(void *, u32, u32, struct dev *),

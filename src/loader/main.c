@@ -28,7 +28,6 @@ int start(void)
 	dev_print();
 
 	cfg_exec();
-	cfg_print();
 
 	// Sleep and wait for interrupts
 	while (1)

@@ -4,9 +4,12 @@
 #include <fs/ext2.h>
 #include <log.h>
 #include <mbr.h>
+#include <pnc.h>
 
 void dsk_detect(struct dev *dev)
 {
+	assert(dev->type == DEV_DISK);
+
 	if (mbr_detect(dev))
 		return;
 

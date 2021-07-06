@@ -17,6 +17,5 @@ enum cfg_key {
 
 const void *cfg_get(u8 index, enum cfg_key key);
 void cfg_exec(void);
-void cfg_print(void);
 
 #endif

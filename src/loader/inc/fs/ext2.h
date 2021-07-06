@@ -1,7 +1,7 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#ifndef EXT2_H
-#define EXT2_H
+#ifndef FS_EXT2_H
+#define FS_EXT2_H
 
 #include <def.h>
 #include <dev.h>

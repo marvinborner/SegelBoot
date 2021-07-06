@@ -17,6 +17,7 @@ struct {
 		u8 exists : 1;
 		char name[64];
 		char path[64];
+		struct dev *dev;
 	} elem[16]; // Up to 16 different selections
 } cfg = { 0 };
 
@@ -26,10 +27,10 @@ static char file[1024] = { 0 };
 // Find config file
 static u8 cfg_find(struct dev *dev)
 {
-	if (!dev->fs.read)
+	if (!dev->p.disk.fs.read)
 		return 0; // No fs found or not readable - continue!
 
-	s32 res = dev->fs.read("/boot/segelboot.cfg", file, 0, sizeof(file), dev);
+	s32 res = dev->p.disk.fs.read("/boot/segelboot.cfg", file, 0, sizeof(file), dev);
 	if (res > 0)
 		return 1; // Break foreach
 
@@ -64,6 +65,21 @@ static void cfg_add(u8 index, enum cfg_key key, const char *value)
 	case CFG_NONE:
 	default:
 		panic("Invalid config\n");
+	}
+}
+
+const void *cfg_get(u8 index, enum cfg_key key)
+{
+	switch (key) {
+	case CFG_NAME:
+		return &cfg.elem[index].path;
+	case CFG_TIMEOUT:
+		return &cfg.timeout;
+	case CFG_PATH:
+		return &cfg.elem[index].path;
+	case CFG_NONE:
+	default:
+		return NULL;
 	}
 }
 
@@ -141,22 +157,44 @@ static void cfg_parse(void)
 	}
 }
 
-const void *cfg_get(u8 index, enum cfg_key key)
+// Extract the disk from path by returning index of delimiter or 0xff
+// Example: disk:/boot/config.cfg returns 4 (:)
+static u8 cfg_path_disk(const char *path)
 {
-	switch (key) {
-	case CFG_NAME:
-		return &cfg.elem[index].path;
-	case CFG_TIMEOUT:
-		return &cfg.timeout;
-	case CFG_PATH:
-		return &cfg.elem[index].path;
-	case CFG_NONE:
-	default:
-		return NULL;
+	for (const char *p = path; *p; p++)
+		if (*p == ':')
+			return p - path;
+	return 0xff;
+}
+
+// Find matching disk dev for every entry and verify path existence and readability
+static void cfg_verify(void)
+{
+	for (u8 i = 0; i < COUNT(cfg.elem) && cfg.elem[i].exists; i++) {
+		u8 len = cfg_path_disk(cfg.elem[i].path);
+		struct dev *dev = dev_get_by_name(cfg.elem[i].path, len);
+		if (!dev || dev->type != DEV_DISK)
+			panic("Invalid device in config\n");
+		cfg.elem[i].dev = dev;
+
+		if (!dev->p.disk.fs.read)
+			panic("Device fs not readable\n");
+
+		// This is now the correct path (due to "disk:PATH")
+		const char *path = &cfg.elem[i].path[len + 1];
+
+		u8 buf[1] = { 0 }; // Just for existence-check
+		s32 ret = dev->p.disk.fs.read(path, buf, 0, sizeof(buf), dev);
+		if (ret != 1 || !buf[0])
+			panic("Path is invalid\n");
+
+		if (!impl_detect(dev, path))
+			panic("No boot implementation found\n");
 	}
 }
 
-void cfg_print(void)
+// Print all configs and entry values
+static void cfg_print(void)
 {
 	log("[CFG] Global: %d\n", cfg.timeout);
 
@@ -170,4 +208,6 @@ void cfg_exec(void)
 	if (!file[0])
 		panic("No config found\n");
 	cfg_parse();
+	cfg_print();
+	cfg_verify();
 }

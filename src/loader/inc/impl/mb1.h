@@ -1,13 +1,11 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#ifndef MB1_H
-#define MB1_H
+#ifndef IMPL_MB1_H
+#define IMPL_MB1_H
 
 #include <def.h>
 #include <dev.h>
 
-#define MB1_MAGIC 0x1badb002
-
-u8 mb1_probe(struct dev *dev);
+u8 mb1_detect(struct dev *dev, const char *path);
 
 #endif

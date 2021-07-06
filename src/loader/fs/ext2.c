@@ -195,7 +195,7 @@ u8 ext2_detect(struct dev *dev)
 	if (sb.magic != EXT2_MAGIC)
 		return 0;
 
-	dev->fs.read = ext2_read;
+	dev->p.disk.fs.read = ext2_read;
 
 	return 1;
 }

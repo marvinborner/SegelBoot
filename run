@@ -97,6 +97,7 @@ build() {
     $SUDO mount "$DEV$PART" mnt/
     $SUDO mkdir -p mnt/boot/
     $SUDO cp example/segelboot.cfg mnt/boot/
+    $SUDO cp build/examples/* mnt/boot/
     $SUDO umount mnt/ || (sync && $SUDO umount mnt/)
     rm -rf mnt/
 

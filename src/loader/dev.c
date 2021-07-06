@@ -19,10 +19,24 @@ static const char *dev_resolve_type(enum dev_type type)
 	}
 }
 
-struct dev *dev_get(u8 id)
+struct dev *dev_get_by_id(u8 id)
 {
 	assert(id < COUNT(devices));
 	return &devices[id];
+}
+
+struct dev *dev_get_by_name(const char *name, u32 len)
+{
+	if (!name || !name[0])
+		return NULL;
+
+	for (u8 i = 0; i < COUNT(devices); i++) {
+		struct dev *dev = &devices[i];
+		if (strncmp(dev->name, name, MIN(sizeof(dev->name), len)) == 0)
+			return dev;
+	}
+
+	return NULL;
 }
 
 void dev_foreach(enum dev_type type, u8 (*cb)(struct dev *))
