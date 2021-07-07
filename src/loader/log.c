@@ -1,3 +1,5 @@
+// MIT License, Copyright (c) 2021 Marvin Borner
+
 #include <cpu.h>
 #include <lib.h>
 #include <log.h>

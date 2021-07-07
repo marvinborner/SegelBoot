@@ -2,6 +2,7 @@
 
 #include <cfg.h>
 #include <dev.h>
+#include <impl/all.h>
 #include <lib.h>
 #include <log.h>
 #include <pnc.h>
@@ -53,7 +54,7 @@ static void cfg_add(u8 index, enum cfg_key key, const char *value)
 		break;
 	case CFG_PATH:
 		cfg_in_entry(index);
-		strlcpy(entry->path, value, sizeof(entry->path));
+		strlcpy(entry->full_path, value, sizeof(entry->full_path));
 		break;
 	case CFG_NONE:
 	default:
@@ -151,8 +152,8 @@ static void cfg_verify(void)
 	for (u8 i = 0; i < COUNT(cfg.entry) && cfg.entry[i].exists; i++) {
 		struct cfg_entry *entry = &cfg.entry[i];
 
-		u8 len = cfg_path_disk(entry->path);
-		struct dev *dev = dev_get_by_name(entry->path, len);
+		u8 len = cfg_path_disk(entry->full_path);
+		struct dev *dev = dev_get_by_name(entry->full_path, len);
 		if (!dev || dev->type != DEV_DISK)
 			panic("Invalid device in config\n");
 		entry->dev = dev;
@@ -161,14 +162,15 @@ static void cfg_verify(void)
 			panic("Device fs not readable\n");
 
 		// This is now the correct path (due to "disk:PATH")
-		const char *path = &entry->path[len + 1];
+		const char *path = &entry->full_path[len + 1];
+		entry->path = path;
 
 		u8 buf[1] = { 0 }; // Just for existence-check
 		s32 ret = dev->p.disk.fs.read(path, buf, 0, sizeof(buf), dev);
 		if (ret != 1 || !buf[0])
 			panic("Path is invalid\n");
 
-		if (!impl_detect(dev, path))
+		if (!impl_detect(entry))
 			panic("No boot implementation found\n");
 	}
 }
@@ -188,13 +190,13 @@ static void cfg_print(void)
 	log("[CFG] Global: %d\n", cfg.timeout);
 
 	for (u8 i = 0; i < COUNT(cfg.entry) && cfg.entry[i].exists; i++)
-		log("[CFG] Entry: %s at %s\n", cfg.entry[i].name, cfg.entry[i].path);
+		log("[CFG] Entry: %s at %s\n", cfg.entry[i].name, cfg.entry[i].full_path);
 }
 
 // Execute entry implementation
 void cfg_exec(struct cfg_entry *entry)
 {
-	impl_exec(entry->dev, &entry->path[cfg_path_disk(entry->path) + 1]);
+	impl_exec(entry);
 }
 
 void cfg_read(void)

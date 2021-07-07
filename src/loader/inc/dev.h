@@ -5,7 +5,6 @@
 
 #include <def.h>
 #include <dsk.h>
-#include <impl/all.h>
 
 enum dev_type {
 	DEV_DISK,
@@ -23,7 +22,6 @@ struct dev {
 	union {
 		struct {
 			struct fs fs;
-			struct impl impl;
 		} disk;
 		// TODO: Other (framebuffer?)
 	} p; // Prototype union

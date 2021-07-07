@@ -3,24 +3,10 @@
 #ifndef IMPL_ALL_H
 #define IMPL_ALL_H
 
+#include <cfg.h>
 #include <def.h>
 
-enum impl_type {
-	IMPL_NONE,
-	IMPL_MB1,
-	IMPL_MB2,
-};
-
-struct dev;
-struct impl {
-	enum impl_type type;
-	void *start; // Of header/entry
-	void (*load)(struct dev *, const char *);
-};
-
-#include <dev.h>
-
-u8 impl_detect(struct dev *dev, const char *path);
-void impl_exec(struct dev *dev, const char *path);
+u8 impl_detect(struct cfg_entry *cfg);
+void impl_exec(struct cfg_entry *cfg);
 
 #endif

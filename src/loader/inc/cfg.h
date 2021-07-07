@@ -4,6 +4,7 @@
 #define CFG_H
 
 #include <def.h>
+#include <impl.h>
 
 // Global config element index (can actually be anything but wth)
 #define CFG_GLOBAL 0
@@ -18,8 +19,10 @@ enum cfg_key {
 struct cfg_entry {
 	u8 exists : 1;
 	char name[64];
-	char path[64];
+	char full_path[64]; // With disk name
+	const char *path; // Without disk name
 	struct dev *dev;
+	struct impl impl;
 };
 
 struct cfg {

@@ -2,57 +2,50 @@
 // Everything according to spec
 
 #include <elf.h>
-#include <impl/mb1.h>
+#include <impl/mb2.h>
 #include <lib.h>
 #include <pnc.h>
 
 // The address where data gets stored
-#define MB1_LOAD_ADDRESS 0x10000
+#define MB2_LOAD_ADDRESS 0x10000
 
 struct multiboot_entry {
 	u32 magic;
 	u32 flags;
+	u32 header_length;
 	u32 checksum; // Everything after that is optional
-	u32 header_addr;
-	u32 load_addr;
-	u32 load_end_addr;
-	u32 bss_end_addr;
-	u32 entry_addr;
-	u32 mode_type;
-	u32 width;
-	u32 height;
-	u32 depth;
+	u8 *tags;
 };
 
 // The (really simple) multiboot checksum algorithm
-static u32 mb1_checksum(struct multiboot_entry *entry)
-{
-	return -(entry->magic + entry->flags);
-}
+/* static u32 mb2_checksum(struct multiboot_entry *entry) */
+/* { */
+/* 	return -(entry->magic + entry->flags); */
+/* } */
 
 // Load data into memory and return address (not overlapping
-static u32 mb1_store(void *data, u32 size)
+static u32 mb2_store(void *data, u32 size)
 {
 	static u32 offset = 0;
-	memcpy((void *)MB1_LOAD_ADDRESS, data, size);
+	memcpy((void *)MB2_LOAD_ADDRESS, data, size);
 	offset += size;
-	return MB1_LOAD_ADDRESS + (size - offset);
+	return MB2_LOAD_ADDRESS + (size - offset);
 }
 
-// Load the mb1 structs into memory
-static void mb1_load(struct multiboot_entry *entry)
+// Load the mb2 structs into memory
+static void mb2_load(struct multiboot_entry *entry)
 {
-	(void)mb1_store;
+	(void)mb2_store;
 	(void)entry;
 }
 
 // Jump to kernel with correct info pointer in eax
-static void mb1_jump(u32 entry, u32 info)
+static void mb2_jump(u32 entry, u32 info)
 {
 	log("Jumping. So long and thanks for all the fish!\n");
 
 	// Move and jump!
-	__asm__ volatile("movl $" STRINGIFY(MB1_LOAD_MAGIC) ", %%eax\n\t"
+	__asm__ volatile("movl $" STRINGIFY(MB2_LOAD_MAGIC) ", %%eax\n\t"
 							    "jmpl *%%edi\n\t"
 			 :
 			 : "D"(entry), "b"(info)
@@ -61,8 +54,8 @@ static void mb1_jump(u32 entry, u32 info)
 	panic("Jumper returned\n");
 }
 
-// Detect and verify mb1
-u8 mb1_detect(struct cfg_entry *cfg)
+// Detect and verify mb2
+u8 mb2_detect(struct cfg_entry *cfg)
 {
 	u8 header[8192] = { 0 };
 
@@ -74,7 +67,7 @@ u8 mb1_detect(struct cfg_entry *cfg)
 	struct multiboot_entry *entry = 0;
 	for (u32 i = 0; i < sizeof(header); i++) {
 		u32 *p = (u32 *)&header[i];
-		if (*p == MB1_MAGIC) {
+		if (*p == MB2_MAGIC) {
 			entry = (void *)p;
 			break;
 		}
@@ -83,26 +76,25 @@ u8 mb1_detect(struct cfg_entry *cfg)
 	if (!entry)
 		return 0;
 
-	u32 checksum = mb1_checksum(entry);
-	if (checksum != entry->checksum)
-		return 0;
+	// TODO: mb2 checksum
+	/* u32 checksum = mb2_checksum(entry); */
+	/* if (checksum != entry->checksum) */
+	/* 	return 0; */
 
-	cfg->impl.type = IMPL_MB1;
+	cfg->impl.type = IMPL_MB2;
 	cfg->impl.start = entry;
 
 	return 1;
 }
 
-#include <pic.h>
-
-// Execute mb1 type kernel
-void mb1_exec(struct cfg_entry *cfg)
+// Execute mb2 type kernel
+void mb2_exec(struct cfg_entry *cfg)
 {
 	u32 entry = elf_load(cfg->dev, cfg->path);
-	mb1_load(cfg->impl.start);
+	mb2_load(cfg->impl.start);
 
 	// This is a kind of hacky parameter stack pushing thing, just disable warning :)
 #pragma GCC diagnostic ignored "-Wpedantic"
-	jmp_kernel((void *)mb1_jump, 2, entry, MB1_LOAD_ADDRESS);
+	jmp_kernel((void *)mb2_jump, 2, entry, MB2_LOAD_ADDRESS);
 #pragma GCC diagnostic pop
 }

@@ -40,8 +40,8 @@ struct generic_address {
 	u8 bit_width;
 	u8 bit_offset;
 	u8 access_size;
-	u32 phys_high;
 	u32 phys_low;
+	u32 phys_high;
 };
 
 /**

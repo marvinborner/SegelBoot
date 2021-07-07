@@ -19,7 +19,7 @@ int kernel_main(u32 magic, u32 addr, u32 esp)
 	(void)addr;
 	(void)esp;
 
-	if (magic == 0x2badb002)
+	if (magic == 0x36d76289)
 		draw(0x02, 'y');
 	else
 		draw(0x04, 'n');

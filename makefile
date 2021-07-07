@@ -29,7 +29,7 @@ ASFLAGS = -f elf32
 
 export
 
-all: dir $(BLD)/boot.bin mb1
+all: dir $(BLD)/boot.bin mb1 mb2
 
 dir:
 	@mkdir -p $(BLD)/entry/
@@ -37,6 +37,9 @@ dir:
 	@mkdir -p $(BLD)/loader/impl/
 
 mb1:
+	@$(MAKE) --no-print-directory -C example/$@
+
+mb2:
 	@$(MAKE) --no-print-directory -C example/$@
 
 $(BLD)/boot.bin: $(BLD)/loader.bin

@@ -18,4 +18,7 @@
 			panic("Assertion '" #exp "' failed\n");                                    \
 	}
 
+// This shouldn't return, therefore this declaration belongs here (kinda)
+void jmp_kernel(void *kernel, int args, ...);
+
 #endif

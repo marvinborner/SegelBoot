@@ -25,6 +25,9 @@ typedef __builtin_va_list va_list;
 #define COUNT(a) (sizeof(a) / sizeof 0 [a])
 #define UNUSED(a) ((void)a);
 
+#define STRINGIFY_PARAM(a) #a
+#define STRINGIFY(a) STRINGIFY_PARAM(a)
+
 #define PACKED __attribute__((packed))
 
 #endif
