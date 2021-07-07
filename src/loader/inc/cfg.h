@@ -28,6 +28,7 @@ struct cfg {
 };
 
 void cfg_foreach(u8 (*cb)(struct cfg_entry *));
+void cfg_exec(struct cfg_entry *entry);
 void cfg_read(void);
 
 #endif

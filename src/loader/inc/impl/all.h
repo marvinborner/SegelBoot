@@ -21,5 +21,6 @@ struct impl {
 #include <dev.h>
 
 u8 impl_detect(struct dev *dev, const char *path);
+void impl_exec(struct dev *dev, const char *path);
 
 #endif

@@ -191,12 +191,18 @@ static void cfg_print(void)
 		log("[CFG] Entry: %s at %s\n", cfg.entry[i].name, cfg.entry[i].path);
 }
 
+// Execute entry implementation
+void cfg_exec(struct cfg_entry *entry)
+{
+	impl_exec(entry->dev, &entry->path[cfg_path_disk(entry->path) + 1]);
+}
+
 void cfg_read(void)
 {
 	dev_foreach(DEV_DISK, &cfg_find);
 	if (!file[0])
 		panic("No config found\n");
 	cfg_parse();
-	cfg_print();
 	cfg_verify();
+	cfg_print();
 }

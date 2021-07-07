@@ -7,5 +7,6 @@
 #include <dev.h>
 
 u8 mb1_detect(struct dev *dev, const char *path);
+void mb1_exec(struct dev *dev, const char *path);
 
 #endif

@@ -1,6 +1,7 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 // Everything according to spec
 
+#include <elf.h>
 #include <impl/mb1.h>
 #include <pnc.h>
 
@@ -57,4 +58,15 @@ u8 mb1_detect(struct dev *dev, const char *path)
 	dev->p.disk.impl.start = entry;
 
 	return 1;
+}
+
+// Execute mb1 type kernel
+void mb1_exec(struct dev *dev, const char *path)
+{
+	u32 entry = elf_load(dev, path);
+	void (*kernel)(void *);
+	*(void **)(&kernel) = (void *)entry;
+
+	// TODO: Push mb1 stuff
+	kernel(dev);
 }
