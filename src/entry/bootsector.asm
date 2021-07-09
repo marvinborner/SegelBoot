@@ -105,7 +105,9 @@ protected_mode:
 	mov gs, ax
 	mov ss, ax
 
+	push dx ; Pass disk
 	call loader
+
 	jmp error_loop
 bits 16
 

@@ -105,7 +105,7 @@ build() {
 }
 
 emulate() {
-    qemu-system-i386 -d guest_errors -cpu max -serial stdio -m 256M -vga std -drive file=build/disk.img,format=raw,index=1,media=disk
+    qemu-system-i386 -enable-kvm -d guest_errors -cpu max -serial stdio -m 256M -vga std -drive file=build/disk.img,format=raw,index=1,media=disk
 }
 
 # Always generate updated configurations

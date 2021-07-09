@@ -15,9 +15,13 @@
  * Entry
  */
 
-int start(void);
-int start(void)
+u8 boot_disk = 0;
+
+int start(u8 disk);
+int start(u8 disk)
 {
+	boot_disk = disk;
+
 	vga_clear();
 	serial_install();
 

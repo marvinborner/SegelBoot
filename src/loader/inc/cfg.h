@@ -6,6 +6,8 @@
 #include <def.h>
 #include <impl.h>
 
+extern u8 boot_disk;
+
 // Global config element index (can actually be anything but wth)
 #define CFG_GLOBAL 0
 

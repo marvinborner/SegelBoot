@@ -9,7 +9,7 @@
 // The address where data gets stored
 #define MB1_LOAD_ADDRESS 0x10000
 
-struct multiboot_entry {
+struct mb1_entry {
 	u32 magic;
 	u32 flags;
 	u32 checksum; // Everything after that is optional
@@ -25,7 +25,7 @@ struct multiboot_entry {
 };
 
 // The (really simple) multiboot checksum algorithm
-static u32 mb1_checksum(struct multiboot_entry *entry)
+static u32 mb1_checksum(struct mb1_entry *entry)
 {
 	return -(entry->magic + entry->flags);
 }
@@ -34,16 +34,27 @@ static u32 mb1_checksum(struct multiboot_entry *entry)
 static u32 mb1_store(void *data, u32 size)
 {
 	static u32 offset = 0;
-	memcpy((void *)MB1_LOAD_ADDRESS, data, size);
+	memcpy((void *)(MB1_LOAD_ADDRESS + offset), data, size);
 	offset += size;
-	return MB1_LOAD_ADDRESS + (size - offset);
+	return MB1_LOAD_ADDRESS + (offset - size);
 }
 
 // Load the mb1 structs into memory
-static void mb1_load(struct multiboot_entry *entry)
+static void mb1_load(struct mb1_entry *entry)
 {
-	(void)mb1_store;
 	(void)entry;
+
+	struct mb1_info info_struct = { 0 };
+	struct mb1_info *info = (void *)mb1_store(&info_struct, sizeof(info_struct));
+
+	// Set boot device
+	info->flags |= MB1_INFO_BOOTDEV;
+	info->boot_device = boot_disk;
+
+	// Set bootloader name
+	info->flags |= MB1_INFO_BOOT_LOADER_NAME;
+	char loader_name[] = "SegelBoot";
+	info->boot_loader_name = mb1_store(loader_name, sizeof(loader_name));
 }
 
 // Jump to kernel with correct info pointer in eax
@@ -71,7 +82,7 @@ u8 mb1_detect(struct cfg_entry *cfg)
 		return 0;
 
 	// Find start of multiboot entry by searching for magic
-	struct multiboot_entry *entry = 0;
+	struct mb1_entry *entry = 0;
 	for (u32 i = 0; i < sizeof(header); i++) {
 		u32 *p = (u32 *)&header[i];
 		if (*p == MB1_MAGIC) {
