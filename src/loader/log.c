@@ -120,6 +120,13 @@ void vga_clear(void)
 		out[i] = 0;
 }
 
+void vga_put_at(char ch, u8 x, u8 y, u8 color)
+{
+	u8 *out = (u8 *)(VGA_ADDRESS + 2 * (x + y * VGA_WIDTH));
+	*out++ = ch;
+	*out++ = color;
+}
+
 static void vga_put(char ch)
 {
 	static u8 x = 0;

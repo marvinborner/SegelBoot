@@ -10,15 +10,20 @@
 // The address where data gets stored
 #define MB1_LOAD_ADDRESS 0x10000
 
+#define MB1_FLAG_PAGE_ALIGN (1 << 0) // Align modules with page boundaries (4K)
+#define MB1_FLAG_MEMORY_INFO (1 << 1) // Load/store all mem_* fields and mmap_* structs
+#define MB1_FLAG_VIDEO_MODE (1 << 2) // Load/store video mode table
+#define MB1_FLAG_MANUAL_ADDRESSES (1 << 16) // Use specified load addresses
+
 struct mb1_entry {
 	u32 magic;
 	u32 flags;
 	u32 checksum; // Everything after that is optional
-	u32 header_addr;
-	u32 load_addr;
-	u32 load_end_addr;
-	u32 bss_end_addr;
-	u32 entry_addr;
+	u32 header_addr; // Unsupported
+	u32 load_addr; // Unsupported
+	u32 load_end_addr; // Unsupported
+	u32 bss_end_addr; // Unsupported
+	u32 entry_addr; // Unsupported
 	u32 mode_type;
 	u32 width;
 	u32 height;
@@ -40,8 +45,9 @@ static u32 mb1_store(void *data, u32 size)
 	return MB1_LOAD_ADDRESS + (offset - size);
 }
 
-static void mb1_store_mmap(struct mb1_info *info)
+static void mb1_store_memory_info(struct mb1_info *info)
 {
+	// TODO: Store mem_lower and mem_upper
 	struct mem_map *mem_map = mem_map_get();
 	info->flags |= MB1_INFO_MEM_MAP;
 	info->mmap_length = mem_map->count * sizeof(struct mb1_mmap_entry);
@@ -59,8 +65,6 @@ static void mb1_store_mmap(struct mb1_info *info)
 // Load the mb1 structs into memory
 static void mb1_load(struct mb1_entry *entry)
 {
-	(void)entry;
-
 	struct mb1_info info_struct = { 0 };
 	struct mb1_info *info = (void *)mb1_store(&info_struct, sizeof(info_struct));
 
@@ -73,9 +77,9 @@ static void mb1_load(struct mb1_entry *entry)
 	char loader_name[] = "SegelBoot";
 	info->boot_loader_name = mb1_store(loader_name, sizeof(loader_name));
 
-	// Set memory map
-	/* if (entry->flags & 2) TODO */
-	mb1_store_mmap(info);
+	// Store memory info
+	if (entry->flags & MB1_FLAG_MEMORY_INFO)
+		mb1_store_memory_info(info);
 }
 
 // Jump to kernel with correct info pointer in eax
@@ -120,18 +124,21 @@ u8 mb1_detect(struct cfg_entry *cfg)
 		return 0;
 
 	cfg->impl.type = IMPL_MB1;
-	cfg->impl.start = entry;
+	cfg->impl.offset = (u32)entry - (u32)header;
 
 	return 1;
 }
 
-#include <pic.h>
-
 // Execute mb1 type kernel
 void mb1_exec(struct cfg_entry *cfg)
 {
+	struct mb1_entry mb1_entry = { 0 };
+	s32 ret = cfg->dev->p.disk.fs.read(cfg->path, &mb1_entry, cfg->impl.offset,
+					   sizeof(mb1_entry), cfg->dev);
+	assert(ret == sizeof(mb1_entry));
+	mb1_load(&mb1_entry);
+
 	u32 entry = elf_load(cfg->dev, cfg->path);
-	mb1_load(cfg->impl.start);
 
 	// This is a kind of hacky parameter stack pushing thing, just disable warning :)
 #pragma GCC diagnostic ignored "-Wpedantic"

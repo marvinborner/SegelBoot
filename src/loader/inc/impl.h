@@ -13,7 +13,7 @@ enum impl_type {
 
 struct impl {
 	enum impl_type type;
-	void *start; // Of header/entry
+	u32 offset; // Of header/entry
 	void (*load)(struct dev *, const char *);
 };
 

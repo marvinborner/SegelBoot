@@ -18,7 +18,8 @@ _start:
 	sub ecx, bss_begin
 	rep stosb
 
-	lgdt [gdt]
+	lgdt [gdt] ; Load GDT
+
 	jmp 0x18:.reload_cs
 
 .reload_cs:
@@ -29,5 +30,4 @@ _start:
 	mov gs, ax
 	mov ss, ax
 
-	cli
 	jmp start

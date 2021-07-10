@@ -14,6 +14,7 @@ static const char *dev_resolve_type(enum dev_type type)
 		return "Disk";
 	case DEV_FB:
 		return "Framebuffer";
+	case DEV_NONE:
 	default:
 		return "Unknown";
 	}

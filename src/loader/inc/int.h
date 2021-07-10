@@ -43,8 +43,6 @@ struct idt_ptr {
 	void *base;
 } PACKED;
 
-extern struct idt_ptr idt;
-
 void idt_install(void);
 void int_event_handler_add(u32 int_no, void (*handler)(void));
 

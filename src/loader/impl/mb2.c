@@ -9,7 +9,7 @@
 // The address where data gets stored
 #define MB2_LOAD_ADDRESS 0x10000
 
-struct multiboot_entry {
+struct mb2_entry {
 	u32 magic;
 	u32 flags;
 	u32 header_length;
@@ -18,7 +18,7 @@ struct multiboot_entry {
 };
 
 // The (really simple) multiboot checksum algorithm
-/* static u32 mb2_checksum(struct multiboot_entry *entry) */
+/* static u32 mb2_checksum(struct mb2_entry *entry) */
 /* { */
 /* 	return -(entry->magic + entry->flags); */
 /* } */
@@ -33,7 +33,7 @@ static u32 mb2_store(void *data, u32 size)
 }
 
 // Load the mb2 structs into memory
-static void mb2_load(struct multiboot_entry *entry)
+static void mb2_load(struct mb2_entry *entry)
 {
 	(void)mb2_store;
 	(void)entry;
@@ -64,7 +64,7 @@ u8 mb2_detect(struct cfg_entry *cfg)
 		return 0;
 
 	// Find start of multiboot entry by searching for magic
-	struct multiboot_entry *entry = 0;
+	struct mb2_entry *entry = 0;
 	for (u32 i = 0; i < sizeof(header); i++) {
 		u32 *p = (u32 *)&header[i];
 		if (*p == MB2_MAGIC) {
@@ -82,7 +82,7 @@ u8 mb2_detect(struct cfg_entry *cfg)
 	/* 	return 0; */
 
 	cfg->impl.type = IMPL_MB2;
-	cfg->impl.start = entry;
+	cfg->impl.offset = (u32)entry - (u32)header;
 
 	return 1;
 }
@@ -90,8 +90,13 @@ u8 mb2_detect(struct cfg_entry *cfg)
 // Execute mb2 type kernel
 void mb2_exec(struct cfg_entry *cfg)
 {
+	struct mb2_entry mb2_entry = { 0 };
+	s32 ret = cfg->dev->p.disk.fs.read(cfg->path, &mb2_entry, cfg->impl.offset,
+					   sizeof(mb2_entry), cfg->dev);
+	assert(ret == sizeof(mb2_entry));
+	mb2_load(&mb2_entry);
+
 	u32 entry = elf_load(cfg->dev, cfg->path);
-	mb2_load(cfg->impl.start);
 
 	// This is a kind of hacky parameter stack pushing thing, just disable warning :)
 #pragma GCC diagnostic ignored "-Wpedantic"

@@ -1,7 +1,5 @@
 ; MIT License, Copyright (c) 2021 Marvin Borner
 
-bits 32
-
 %macro INT_REGISTER 1
 dd int%1
 %endmacro
@@ -29,7 +27,7 @@ int_common:
 	push fs
 	push gs
 
-	mov ax, 0x10
+	mov ax, 0x20
 	mov ds, ax
 	mov es, ax
 	mov fs, ax

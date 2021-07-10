@@ -40,6 +40,7 @@ int start(u8 disk)
 	sel_draw();
 
 	// Sleep and wait for interrupts
+	__asm__ volatile("sti");
 	while (1)
 		__asm__ volatile("hlt");
 

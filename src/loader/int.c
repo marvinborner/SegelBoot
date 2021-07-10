@@ -11,21 +11,21 @@
 
 extern u32 int_table[];
 static struct idt_entry idt_entries[256] = { 0 };
-REAL struct idt_ptr idt = { .size = sizeof(idt_entries) - 1, .base = &idt_entries };
+REAL static struct idt_ptr idt = { .size = sizeof(idt_entries) - 1, .base = idt_entries };
 
 void idt_install(void)
 {
 	for (u8 i = 0; i < 3; i++)
-		idt_entries[i] = IDT_ENTRY(int_table[i], 0x08, INT_GATE);
+		idt_entries[i] = IDT_ENTRY(int_table[i], 0x18, INT_GATE);
 
-	idt_entries[3] = IDT_ENTRY(int_table[3], 0x08, INT_TRAP);
-	idt_entries[4] = IDT_ENTRY(int_table[4], 0x08, INT_TRAP);
+	idt_entries[3] = IDT_ENTRY(int_table[3], 0x18, INT_TRAP);
+	idt_entries[4] = IDT_ENTRY(int_table[4], 0x18, INT_TRAP);
 
 	for (u8 i = 5; i < 48; i++)
-		idt_entries[i] = IDT_ENTRY(int_table[i], 0x08, INT_GATE);
+		idt_entries[i] = IDT_ENTRY(int_table[i], 0x18, INT_GATE);
 
 	// Load table
-	__asm__ volatile("lidt %0" : : "m"(idt));
+	__asm__ volatile("lidt %0" : : "m"(idt) : "memory");
 }
 
 /**

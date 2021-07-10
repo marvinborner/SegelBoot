@@ -7,6 +7,7 @@
 #include <dsk.h>
 
 enum dev_type {
+	DEV_NONE,
 	DEV_DISK,
 	DEV_FB,
 };
