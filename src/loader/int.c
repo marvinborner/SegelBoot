@@ -10,31 +10,22 @@
  */
 
 extern u32 int_table[];
-static struct idt_entry idt[256] = { 0 };
-static struct idt_ptr idt_ptr = { 0 };
+static struct idt_entry idt_entries[256] = { 0 };
+REAL struct idt_ptr idt = { .size = sizeof(idt_entries) - 1, .base = &idt_entries };
 
 void idt_install(void)
 {
-	idt_ptr.size = sizeof(idt) - 1;
-	idt_ptr.base = &idt;
-
 	for (u8 i = 0; i < 3; i++)
-		idt[i] = IDT_ENTRY(int_table[i], 0x08, INT_GATE);
+		idt_entries[i] = IDT_ENTRY(int_table[i], 0x08, INT_GATE);
 
-	idt[3] = IDT_ENTRY(int_table[3], 0x08, INT_TRAP);
-	idt[4] = IDT_ENTRY(int_table[4], 0x08, INT_TRAP);
+	idt_entries[3] = IDT_ENTRY(int_table[3], 0x08, INT_TRAP);
+	idt_entries[4] = IDT_ENTRY(int_table[4], 0x08, INT_TRAP);
 
 	for (u8 i = 5; i < 48; i++)
-		idt[i] = IDT_ENTRY(int_table[i], 0x08, INT_GATE);
-
-	idt[128] = IDT_ENTRY(int_table[48], 0x08, INT_GATE | INT_USER);
-	idt[129] = IDT_ENTRY(int_table[49], 0x08, INT_GATE);
+		idt_entries[i] = IDT_ENTRY(int_table[i], 0x08, INT_GATE);
 
 	// Load table
-	__asm__ volatile("lidt %0" : : "m"(idt_ptr));
-
-	// Enable interrupts
-	__asm__ volatile("sti");
+	__asm__ volatile("lidt %0" : : "m"(idt));
 }
 
 /**

@@ -4,6 +4,7 @@
 #include <elf.h>
 #include <impl/mb1.h>
 #include <lib.h>
+#include <mem.h>
 #include <pnc.h>
 
 // The address where data gets stored
@@ -39,6 +40,22 @@ static u32 mb1_store(void *data, u32 size)
 	return MB1_LOAD_ADDRESS + (offset - size);
 }
 
+static void mb1_store_mmap(struct mb1_info *info)
+{
+	struct mem_map *mem_map = mem_map_get();
+	info->flags |= MB1_INFO_MEM_MAP;
+	info->mmap_length = mem_map->count * sizeof(struct mb1_mmap_entry);
+	info->mmap_addr = mb1_store(NULL, 0);
+	for (u32 i = 0; i < mem_map->count; i++) {
+		struct mb1_mmap_entry mmap_entry;
+		mmap_entry.struct_size = sizeof(mmap_entry) - 4;
+		mmap_entry.addr_low = mem_map->entry[i].base;
+		mmap_entry.len_low = mem_map->entry[i].length;
+		mmap_entry.type = mem_map->entry[i].type;
+		mb1_store(&mmap_entry, sizeof(mmap_entry));
+	}
+}
+
 // Load the mb1 structs into memory
 static void mb1_load(struct mb1_entry *entry)
 {
@@ -55,6 +72,10 @@ static void mb1_load(struct mb1_entry *entry)
 	info->flags |= MB1_INFO_BOOT_LOADER_NAME;
 	char loader_name[] = "SegelBoot";
 	info->boot_loader_name = mb1_store(loader_name, sizeof(loader_name));
+
+	// Set memory map
+	/* if (entry->flags & 2) TODO */
+	mb1_store_mmap(info);
 }
 
 // Jump to kernel with correct info pointer in eax

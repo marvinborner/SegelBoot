@@ -28,6 +28,7 @@ typedef __builtin_va_list va_list;
 #define STRINGIFY_PARAM(a) #a
 #define STRINGIFY(a) STRINGIFY_PARAM(a)
 
+#define REAL __attribute__((section(".realmode")))
 #define PACKED __attribute__((packed))
 
 #endif

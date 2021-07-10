@@ -2,16 +2,24 @@
 
 OUTPUT_FORMAT("elf32-i386")
 OUTPUT_ARCH(i386)
-ENTRY(start)
+ENTRY(_start)
 phys = 0x7e00;
 
 SECTIONS
 {
 	. = phys;
 
+	.entry :
+	{
+		*(.entry*)
+	}
+
+	.realmode : {
+		*(.realmode*)
+	}
+
 	.text :
 	{
-		*(.text.start)
 		*(.text*)
 	}
 
@@ -27,8 +35,10 @@ SECTIONS
 
 	.bss :
 	{
+		bss_begin = .;
 		*(COMMON)
 		*(.bss)
+		bss_end = .;
 	}
 
 	end = .;
