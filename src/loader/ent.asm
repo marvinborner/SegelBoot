@@ -20,10 +20,10 @@ _start:
 
 	lgdt [gdt] ; Load GDT
 
-	jmp 0x18:.reload_cs
+	jmp 0x18:.reload_cs ; Use third GDT segment for code
 
 .reload_cs:
-	mov eax, 0x20
+	mov eax, 0x20 ; Use fourth GDT segment for data/other
 	mov ds, ax
 	mov es, ax
 	mov fs, ax

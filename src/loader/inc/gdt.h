@@ -16,7 +16,7 @@ struct gdt_desc {
 	u16 base_low;
 	u8 base_mid;
 	u8 access;
-	u8 granularity;
+	u8 flags;
 	u8 base_hi;
 } PACKED;
 
