@@ -4,8 +4,8 @@
 #include <a20.h>
 #include <cpu.h>
 #include <def.h>
-#include <pnc.h>
-#include <rem.h>
+#include <panic.h>
+#include <real.h>
 
 static u8 a20_check(void)
 {
@@ -26,9 +26,9 @@ void a20_enable(void)
 		return;
 
 	// BIOS method
-	struct rem_regs r = { 0 };
+	struct real_regs r = { 0 };
 	r.eax = 0x2401;
-	rem_int(0x15, &r, &r);
+	real_int(0x15, &r, &r);
 
 	if (a20_check())
 		return;

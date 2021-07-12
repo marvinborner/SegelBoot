@@ -1,8 +1,8 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
 #include <acpi.h>
-#include <lib.h>
-#include <pnc.h>
+#include <library.h>
+#include <panic.h>
 
 /**
  * General SDP

@@ -1,15 +1,15 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 // Real mode emulation - Implementation by Napalm (see rem.asm)
 
-#ifndef REM_H
-#define REM_H
+#ifndef REAL_H
+#define REAL_H
 
 #include <def.h>
 
 #define EFLAGS_CF (1 << 0) // Carry flag
 #define EFLAGS_ZF (1 << 6) // Zero flag
 
-struct rem_regs {
+struct real_regs {
 	u16 gs;
 	u16 fs;
 	u16 es;
@@ -24,6 +24,6 @@ struct rem_regs {
 	u32 eax;
 } PACKED;
 
-void rem_int(u8 int_num, struct rem_regs *out_regs, struct rem_regs *in_regs);
+void real_int(u8 interrupt_num, struct real_regs *out_regs, struct real_regs *in_regs);
 
 #endif

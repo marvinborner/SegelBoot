@@ -1,32 +1,32 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 // Device manager
 
-#include <dev.h>
-#include <lib.h>
-#include <pnc.h>
+#include <device.h>
+#include <library.h>
+#include <panic.h>
 
 static struct dev devices[32] = { 0 };
 
-static const char *dev_resolve_type(enum dev_type type)
+static const char *device_resolve_type(enum device_type type)
 {
 	switch (type) {
-	case DEV_DISK:
+	case DEVICE_DISK:
 		return "Disk";
-	case DEV_FB:
+	case DEVICE_FB:
 		return "Framebuffer";
-	case DEV_NONE:
+	case DEVICE_NONE:
 	default:
 		return "Unknown";
 	}
 }
 
-struct dev *dev_get_by_id(u8 id)
+struct dev *device_get_by_id(u8 id)
 {
 	assert(id < COUNT(devices));
 	return &devices[id];
 }
 
-struct dev *dev_get_by_name(const char *name, u32 len)
+struct dev *device_get_by_name(const char *name, u32 len)
 {
 	if (!name || !name[0])
 		return NULL;
@@ -40,7 +40,7 @@ struct dev *dev_get_by_name(const char *name, u32 len)
 	return NULL;
 }
 
-void dev_foreach(enum dev_type type, u8 (*cb)(struct dev *))
+void device_foreach(enum device_type type, u8 (*cb)(struct dev *))
 {
 	for (u8 i = 0; i < COUNT(devices); i++) {
 		struct dev *dev = &devices[i];
@@ -50,7 +50,7 @@ void dev_foreach(enum dev_type type, u8 (*cb)(struct dev *))
 	}
 }
 
-u8 dev_register(enum dev_type type, char *name, u32 data,
+u8 device_register(enum device_type type, char *name, u32 data,
 		s32 (*read)(void *, u32, u32, struct dev *),
 		s32 (*write)(const void *, u32, u32, struct dev *))
 {
@@ -67,18 +67,18 @@ u8 dev_register(enum dev_type type, char *name, u32 data,
 	assert(strlen(name) < sizeof(dev->name));
 	memcpy(dev->name, name, sizeof(dev->name));
 
-	if (type == DEV_DISK)
-		dsk_detect(dev);
+	if (type == DEVICE_DISK)
+		disk_detect(dev);
 
 	return id;
 }
 
-void dev_print(void)
+void device_print(void)
 {
 	for (u8 i = 0; i < COUNT(devices); i++) {
 		struct dev *dev = &devices[i];
 		if (!dev->id)
 			continue;
-		log("[DEV] %d: %s device: %s\n", dev->id, dev_resolve_type(dev->type), dev->name);
+		log("[DEV] %d: %s device: %s\n", dev->id, device_resolve_type(dev->type), dev->name);
 	}
 }

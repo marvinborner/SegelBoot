@@ -1,9 +1,9 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#include <dev.h>
+#include <device.h>
 #include <fs/ext2.h>
-#include <lib.h>
-#include <pnc.h>
+#include <library.h>
+#include <panic.h>
 
 static void ext2_buffer_read(u32 block, void *buf, struct dev *dev)
 {

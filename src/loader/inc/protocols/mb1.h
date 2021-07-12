@@ -3,9 +3,9 @@
 #ifndef IMPL_MB1_H
 #define IMPL_MB1_H
 
-#include <cfg.h>
+#include <config.h>
 #include <def.h>
-#include <dev.h>
+#include <device.h>
 
 #define MB1_MAGIC 0x1badb002 // Identifies kernel
 #define MB1_LOAD_MAGIC 0x2badb002 // Passed to kernel
@@ -16,7 +16,7 @@
 #define MB1_INFO_MODS 0x00000008
 #define MB1_INFO_AOUT_SYMS 0x00000010
 #define MB1_INFO_ELF_SHDR 0x00000020
-#define MB1_INFO_MEM_MAP 0x00000040
+#define MB1_INFO_MEMORY_MAP 0x00000040
 #define MB1_INFO_DRIVE_INFO 0x00000080
 #define MB1_INFO_CONFIG_TABLE 0x00000100
 #define MB1_INFO_BOOT_LOADER_NAME 0x00000200
@@ -53,8 +53,8 @@ struct mb1_elf_section_header_table {
 struct mb1_info {
 	u32 flags;
 
-	u32 mem_lower;
-	u32 mem_upper;
+	u32 memory_lower;
+	u32 memory_upper;
 
 	u32 boot_device;
 
@@ -128,7 +128,7 @@ struct mb1_mod_list {
 	u32 pad;
 };
 
-u8 mb1_detect(struct cfg_entry *cfg);
-void mb1_exec(struct cfg_entry *cfg);
+u8 mb1_detect(struct config_entry *cfg);
+void mb1_exec(struct config_entry *cfg);
 
 #endif

@@ -1,11 +1,11 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#include <cfg.h>
-#include <dev.h>
-#include <impl/all.h>
-#include <lib.h>
+#include <config.h>
+#include <device.h>
+#include <protocols/all.h>
+#include <library.h>
 #include <log.h>
-#include <pnc.h>
+#include <panic.h>
 
 // Keys
 #define TIMEOUT "TIMEOUT"
@@ -18,7 +18,7 @@ static struct cfg cfg = { 0 };
 static char file[1024] = { 0 };
 
 // Find config file
-static u8 cfg_find(struct dev *dev)
+static u8 config_find(struct dev *dev)
 {
 	if (!dev->p.disk.fs.read)
 		return 0; // No fs found or not readable - continue!
@@ -32,31 +32,31 @@ static u8 cfg_find(struct dev *dev)
 }
 
 // Checks if index is appropriate as some key/value need to be in entry
-static void cfg_in_entry(u8 index)
+static void config_in_entry(u8 index)
 {
 	if (index == 0xff)
 		panic("No entry name given\n");
 }
 
 // Add/overwrite value by key and entry index
-static void cfg_add(u8 index, enum cfg_key key, const char *value)
+static void config_add(u8 index, enum config_key key, const char *value)
 {
-	struct cfg_entry *entry = &cfg.entry[index];
+	struct config_entry *entry = &cfg.entry[index];
 	entry->exists = 1;
 
 	switch (key) {
-	case CFG_NAME:
-		cfg_in_entry(index);
+	case CONFIG_NAME:
+		config_in_entry(index);
 		strlcpy(entry->name, value, sizeof(entry->name));
 		break;
-	case CFG_TIMEOUT:
+	case CONFIG_TIMEOUT:
 		cfg.timeout = atoi(value);
 		break;
-	case CFG_PATH:
-		cfg_in_entry(index);
+	case CONFIG_PATH:
+		config_in_entry(index);
 		strlcpy(entry->full_path, value, sizeof(entry->full_path));
 		break;
-	case CFG_NONE:
+	case CONFIG_NONE:
 	default:
 		panic("Invalid config\n");
 	}
@@ -64,7 +64,7 @@ static void cfg_add(u8 index, enum cfg_key key, const char *value)
 
 // TODO: This code is kind of messy
 // Structure per line: KEY=VALUE
-static void cfg_parse(void)
+static void config_parse(void)
 {
 	// Entry index
 	u8 entry = 0xff;
@@ -74,7 +74,7 @@ static void cfg_parse(void)
 	u8 value_index = 0;
 
 	// States
-	enum cfg_key current = CFG_NONE; // Value key type
+	enum config_key current = CONFIG_NONE; // Value key type
 	u8 state = 0; // 0 is key, 1 is value, 2 is entry
 
 	const char *start = file; // Start is at the beginning of the key
@@ -96,14 +96,14 @@ static void cfg_parse(void)
 
 			// Timeout key
 			if (diff == sizeof(TIMEOUT) - 1 && memcmp(start, TIMEOUT, diff) == 0) {
-				current = CFG_TIMEOUT;
+				current = CONFIG_TIMEOUT;
 				state = 1;
 				continue;
 			}
 
 			// Path key
 			if (diff == sizeof(PATH) - 1 && memcmp(start, PATH, diff) == 0) {
-				current = CFG_PATH;
+				current = CONFIG_PATH;
 				state = 1;
 				continue;
 			}
@@ -112,7 +112,7 @@ static void cfg_parse(void)
 			assert(value_index + 1 < (u8)sizeof(value));
 			if (*p == '\n') { // Finished
 				value[value_index] = 0;
-				cfg_add(entry, current, value);
+				config_add(entry, current, value);
 				value_index = 0;
 				state = 0;
 				p--; // Repeat parse normally
@@ -125,7 +125,7 @@ static void cfg_parse(void)
 			if (*p == '\n') { // Finished
 				entry = entry == 0xff ? 0 : entry + 1;
 				value[value_index] = 0;
-				cfg_add(entry, CFG_NAME, value);
+				config_add(entry, CONFIG_NAME, value);
 				value_index = 0;
 				state = 0;
 				p--; // Repeat parse normally
@@ -138,7 +138,7 @@ static void cfg_parse(void)
 
 // Extract the disk from path by returning index of delimiter or 0xff
 // Example: disk:/boot/config.cfg returns 4 (:)
-static u8 cfg_path_disk(const char *path)
+static u8 config_path_disk(const char *path)
 {
 	for (const char *p = path; *p; p++)
 		if (*p == ':')
@@ -147,14 +147,14 @@ static u8 cfg_path_disk(const char *path)
 }
 
 // Find matching disk dev for every entry and verify path existence and readability
-static void cfg_verify(void)
+static void config_verify(void)
 {
 	for (u8 i = 0; i < COUNT(cfg.entry) && cfg.entry[i].exists; i++) {
-		struct cfg_entry *entry = &cfg.entry[i];
+		struct config_entry *entry = &cfg.entry[i];
 
-		u8 len = cfg_path_disk(entry->full_path);
-		struct dev *dev = dev_get_by_name(entry->full_path, len);
-		if (!dev || dev->type != DEV_DISK)
+		u8 len = config_path_disk(entry->full_path);
+		struct dev *dev = device_get_by_name(entry->full_path, len);
+		if (!dev || dev->type != DEVICE_DISK)
 			panic("Invalid device in config\n");
 		entry->dev = dev;
 
@@ -176,7 +176,7 @@ static void cfg_verify(void)
 }
 
 // Call cb for each entry config
-void cfg_foreach(u8 (*cb)(struct cfg_entry *))
+void config_foreach(u8 (*cb)(struct config_entry *))
 {
 	for (u8 i = 0; i < COUNT(cfg.entry) && cfg.entry[i].exists; i++) {
 		if (cb(&cfg.entry[i])) // 1 means break
@@ -185,7 +185,7 @@ void cfg_foreach(u8 (*cb)(struct cfg_entry *))
 }
 
 // Print all configs and entry values
-static void cfg_print(void)
+static void config_print(void)
 {
 	log("[CFG] Global: %d\n", cfg.timeout);
 
@@ -194,17 +194,17 @@ static void cfg_print(void)
 }
 
 // Execute entry implementation
-void cfg_exec(struct cfg_entry *entry)
+void config_exec(struct config_entry *entry)
 {
 	impl_exec(entry);
 }
 
-void cfg_read(void)
+void config_read(void)
 {
-	dev_foreach(DEV_DISK, &cfg_find);
+	device_foreach(DEVICE_DISK, &config_find);
 	if (!file[0])
 		panic("No config found\n");
-	cfg_parse();
-	cfg_verify();
-	cfg_print();
+	config_parse();
+	config_verify();
+	config_print();
 }

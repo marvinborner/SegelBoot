@@ -1,13 +1,13 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#ifndef INT_H
-#define INT_H
+#ifndef INTERRUPT_H
+#define INTERRUPT_H
 
 #include <def.h>
 
-#define INT_GATE 0x8e
-#define INT_TRAP 0xef
-#define INT_USER 0x60
+#define INTERRUPT_GATE 0x8e
+#define INTERRUPT_TRAP 0xef
+#define INTERRUPT_USER 0x60
 #define IDT_ENTRY(offset, selector, type)                                                          \
 	(struct idt_entry)                                                                         \
 	{                                                                                          \
@@ -15,17 +15,17 @@
 		.base_high = (u16)(((offset) >> 16) & 0xffff),                                     \
 	}
 
-struct int_frame {
+struct interrupt_frame {
 	u32 gs, fs, es, ds;
 	u32 edi, esi, ebp, esp, ebx, edx, ecx, eax;
-	u32 int_no, err_code;
+	u32 interrupt_no, err_code;
 	u32 eip, cs, eflags;
 } PACKED;
 
-struct int_frame_user {
+struct interrupt_frame_user {
 	u32 gs, fs, es, ds;
 	u32 edi, esi, ebp, esp, ebx, edx, ecx, eax;
-	u32 int_no, err_code;
+	u32 interrupt_no, err_code;
 	u32 eip, cs, eflags;
 	u32 useresp, ss;
 } PACKED;
@@ -44,6 +44,6 @@ struct idt_ptr {
 } PACKED;
 
 void idt_install(void);
-void int_event_handler_add(u32 int_no, void (*handler)(void));
+void interrupt_event_handler_add(u32 interrupt_no, void (*handler)(void));
 
 #endif

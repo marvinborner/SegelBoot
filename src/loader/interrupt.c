@@ -1,28 +1,28 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#include <int.h>
+#include <interrupt.h>
 #include <log.h>
 #include <pic.h>
-#include <pnc.h>
+#include <panic.h>
 
 /**
  * IDT
  */
 
-extern u32 int_table[];
+extern u32 interrupt_table[];
 static struct idt_entry idt_entries[256] = { 0 };
 REAL static struct idt_ptr idt = { .size = sizeof(idt_entries) - 1, .base = idt_entries };
 
 void idt_install(void)
 {
 	for (u8 i = 0; i < 3; i++)
-		idt_entries[i] = IDT_ENTRY(int_table[i], 0x18, INT_GATE);
+		idt_entries[i] = IDT_ENTRY(interrupt_table[i], 0x18, INTERRUPT_GATE);
 
-	idt_entries[3] = IDT_ENTRY(int_table[3], 0x18, INT_TRAP);
-	idt_entries[4] = IDT_ENTRY(int_table[4], 0x18, INT_TRAP);
+	idt_entries[3] = IDT_ENTRY(interrupt_table[3], 0x18, INTERRUPT_TRAP);
+	idt_entries[4] = IDT_ENTRY(interrupt_table[4], 0x18, INTERRUPT_TRAP);
 
 	for (u8 i = 5; i < 48; i++)
-		idt_entries[i] = IDT_ENTRY(int_table[i], 0x18, INT_GATE);
+		idt_entries[i] = IDT_ENTRY(interrupt_table[i], 0x18, INTERRUPT_GATE);
 
 	// Load table
 	__asm__ volatile("lidt %0" : : "m"(idt) : "memory");
@@ -32,7 +32,7 @@ void idt_install(void)
  * Exception (trap) handling
  */
 
-const char *int_trap_names[32] = {
+static const char *interrupt_trap_names[32] = {
 	"Division By Zero",
 	"Debug",
 	"Non Maskable Interrupt",
@@ -70,7 +70,7 @@ const char *int_trap_names[32] = {
 	"Reserved",
 };
 
-static void int_trap_handler(struct int_frame *frame)
+static void interrupt_trap_handler(struct interrupt_frame *frame)
 {
 	static u8 faulting = 0;
 	faulting++;
@@ -82,7 +82,7 @@ static void int_trap_handler(struct int_frame *frame)
 			__asm__ volatile("cli\nhlt");
 	}
 
-	log("%s Exception (code %x) at 0x%x!\n", int_trap_names[frame->int_no], frame->err_code,
+	log("%s Exception (code %x) at 0x%x!\n", interrupt_trap_names[frame->interrupt_no], frame->err_code,
 	    frame->eip);
 
 	while (1)
@@ -93,19 +93,19 @@ static void int_trap_handler(struct int_frame *frame)
  * Event handling
  */
 
-static void (*int_event_handlers[16])(void) = { 0 };
+static void (*interrupt_event_handlers[16])(void) = { 0 };
 
-void int_event_handler_add(u32 int_no, void (*handler)(void))
+void interrupt_event_handler_add(u32 interrupt_no, void (*handler)(void))
 {
-	assert(int_no < COUNT(int_event_handlers));
-	int_event_handlers[int_no] = handler;
+	assert(interrupt_no < COUNT(interrupt_event_handlers));
+	interrupt_event_handlers[interrupt_no] = handler;
 }
 
-static u32 int_event_handler(struct int_frame *frame)
+static u32 interrupt_event_handler(struct interrupt_frame *frame)
 {
-	u32 int_no = frame->int_no - 32;
-	assert(int_no < COUNT(int_event_handlers));
-	void (*handler)(void) = int_event_handlers[int_no];
+	u32 interrupt_no = frame->interrupt_no - 32;
+	assert(interrupt_no < COUNT(interrupt_event_handlers));
+	void (*handler)(void) = interrupt_event_handlers[interrupt_no];
 	if (handler)
 		handler();
 
@@ -116,17 +116,17 @@ static u32 int_event_handler(struct int_frame *frame)
  * Universal handler
  */
 
-u32 int_handler(u32 esp);
-u32 int_handler(u32 esp)
+u32 interrupt_handler(u32 esp);
+u32 interrupt_handler(u32 esp)
 {
-	struct int_frame *frame = (struct int_frame *)esp;
-	if (frame->int_no < 32)
-		int_trap_handler(frame);
-	else if (frame->int_no < 48)
-		esp = int_event_handler(frame);
+	struct interrupt_frame *frame = (struct interrupt_frame *)esp;
+	if (frame->interrupt_no < 32)
+		interrupt_trap_handler(frame);
+	else if (frame->interrupt_no < 48)
+		esp = interrupt_event_handler(frame);
 	else
 		panic("Unknown interrupt\n");
 
-	pic_ack(frame->int_no);
+	pic_ack(frame->interrupt_no);
 	return esp;
 }

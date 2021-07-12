@@ -2,13 +2,11 @@
 
 #include <cpu.h>
 #include <def.h>
-#include <dev.h>
+#include <device.h>
 #include <ide.h>
-#include <lib.h>
+#include <library.h>
 #include <log.h>
-#include <pnc.h>
-
-static u8 ide_buf[SECTOR_SIZE] = { 0 };
+#include <panic.h>
 
 static void ide_select_drive(u8 bus, u8 drive)
 {
@@ -27,6 +25,8 @@ static void ide_select_drive(u8 bus, u8 drive)
 
 static u8 ide_find(u8 bus, u8 drive)
 {
+	static u8 ide_buf[SECTOR_SIZE] = { 0 };
+
 	u16 io = bus == ATA_PRIMARY ? ATA_PRIMARY_IO : ATA_SECONDARY_IO;
 	ide_select_drive(bus, drive);
 
@@ -113,7 +113,7 @@ static void ata_probe(void)
 		name[2] = 'a' + i;
 
 		// Register without write support
-		dev_register(DEV_DISK, name, data, ata_read, NULL);
+		device_register(DEVICE_DISK, name, data, ata_read, NULL);
 	}
 }
 

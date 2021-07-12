@@ -3,11 +3,11 @@
 
 section .realmode
 
-global rem_int
-rem_int:
-	; Self-modifying code: int $int_no
+global real_int
+real_int:
+	; Self-modifying code: int $interrupt_no
 	mov al, byte [esp+4]
-	mov byte [.int_no], al
+	mov byte [.interrupt_no], al
 
 	; Save out_regs
 	mov eax, dword [esp+8]
@@ -24,7 +24,7 @@ rem_int:
 	sidt [.idt]
 
 	; Load BIOS IVT
-	lidt [.rem_idt]
+	lidt [.real_idt]
 
 	; Save non-scratch GPRs
 	push ebx
@@ -71,7 +71,7 @@ rem_int:
 
 	; Indirect interrupt call
 	db 0xcd
- .int_no:
+ .interrupt_no:
 	db 0
 
 	cli
@@ -134,6 +134,6 @@ align 16
 	dq 0
 .idt:
 	dq 0
-.rem_idt:
+.real_idt:
 	dw 0x3ff
 	dd 0

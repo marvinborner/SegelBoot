@@ -98,6 +98,10 @@ build() {
     $SUDO mkdir -p mnt/boot/
     $SUDO cp example/segelboot.cfg mnt/boot/
     $SUDO cp build/examples/* mnt/boot/
+
+    $SUDO cp -r "$HOME"/code/melvix/disk/* mnt/ || true
+    $SUDO cp -r "$HOME"/code/melvix/build/apps/ mnt/apps/ || true
+
     $SUDO umount mnt/ || (sync && $SUDO umount mnt/)
     rm -rf mnt/
 

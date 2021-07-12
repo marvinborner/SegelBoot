@@ -3,9 +3,9 @@
 #ifndef IMPL_MB2_H
 #define IMPL_MB2_H
 
-#include <cfg.h>
+#include <config.h>
 #include <def.h>
-#include <dev.h>
+#include <device.h>
 
 #define MB2_MAGIC 0xe85250d6 // Identifies kernel
 #define MB2_LOAD_MAGIC 0x36d76289 // Passed to kernel
@@ -55,7 +55,7 @@ enum mb2_tags {
 	MB2_TAG_ACPI_2 = 15,
 };
 
-u8 mb2_detect(struct cfg_entry *cfg);
-void mb2_exec(struct cfg_entry *cfg);
+u8 mb2_detect(struct config_entry *cfg);
+void mb2_exec(struct config_entry *cfg);
 
 #endif

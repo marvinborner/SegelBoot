@@ -4,7 +4,7 @@
 #define FS_EXT2_H
 
 #include <def.h>
-#include <dev.h>
+#include <device.h>
 
 #define EXT2_BOOT 0
 #define EXT2_SUPER 1

@@ -5,7 +5,7 @@
 #define ELF_H
 
 #include <def.h>
-#include <dev.h>
+#include <device.h>
 
 #define ELF_MAG0 0x7F
 #define ELF_MAG1 'E'

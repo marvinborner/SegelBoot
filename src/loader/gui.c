@@ -1,19 +1,19 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 // GUI - selection interface
 
-#include <cfg.h>
+#include <config.h>
 #include <cpu.h>
 #include <def.h>
 #include <gui.h>
-#include <int.h>
+#include <interrupt.h>
 #include <log.h>
-#include <pnc.h>
+#include <panic.h>
 
-struct {
-	struct cfg_entry *cfg;
+static struct {
+	struct config_entry *cfg;
 } gui_entries[16] = { 0 };
 
-static u8 gui_entry_add(struct cfg_entry *entry)
+static u8 gui_entry_add(struct config_entry *entry)
 {
 	static u8 index = 0;
 	assert(index + 1 < (u8)sizeof(gui_entries));
@@ -32,7 +32,7 @@ static u8 gui_entry_exists(u8 entry)
 static void gui_entry_select(u8 entry)
 {
 	if (gui_entry_exists(entry))
-		cfg_exec(gui_entries[entry].cfg);
+		config_exec(gui_entries[entry].cfg);
 	else
 		log("Invalid selection\n");
 }
@@ -71,8 +71,8 @@ void gui_draw(void)
 	vga_clear();
 	vga_log("SegelBoot by Marvin Borner\n\n");
 
-	cfg_foreach(&gui_entry_add);
+	config_foreach(&gui_entry_add);
 	gui_entries_draw();
 
-	int_event_handler_add(1, &gui_keyboard_handler);
+	interrupt_event_handler_add(1, &gui_keyboard_handler);
 }

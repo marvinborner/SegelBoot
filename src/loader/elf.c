@@ -1,11 +1,11 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
 #include <elf.h>
-#include <pnc.h>
+#include <panic.h>
 
 u32 elf_load(struct dev *dev, const char *path)
 {
-	assert(dev->type == DEV_DISK);
+	assert(dev->type == DEVICE_DISK);
 
 	struct elf_header header = { 0 };
 	s32 rd = dev->p.disk.fs.read(path, &header, 0, sizeof(header), dev);

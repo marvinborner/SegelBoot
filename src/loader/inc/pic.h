@@ -6,6 +6,6 @@
 #include <def.h>
 
 void pic_install(void);
-void pic_ack(u32 int_no);
+void pic_ack(u32 interrupt_no);
 
 #endif

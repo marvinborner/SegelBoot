@@ -1,14 +1,14 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#include <dsk.h>
+#include <disk.h>
 #include <fs/ext2.h>
 #include <log.h>
 #include <mbr.h>
-#include <pnc.h>
+#include <panic.h>
 
-void dsk_detect(struct dev *dev)
+void disk_detect(struct dev *dev)
 {
-	assert(dev->type == DEV_DISK);
+	assert(dev->type == DEVICE_DISK);
 
 	if (mbr_detect(dev))
 		return;

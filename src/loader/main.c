@@ -2,14 +2,14 @@
 
 #include <a20.h>
 #include <acpi.h>
-#include <cfg.h>
+#include <config.h>
 #include <def.h>
-#include <dev.h>
+#include <device.h>
 #include <gui.h>
 #include <ide.h>
-#include <int.h>
+#include <interrupt.h>
 #include <log.h>
-#include <mem.h>
+#include <memory.h>
 #include <pci.h>
 #include <pic.h>
 
@@ -23,7 +23,7 @@ int start(u8 disk);
 int start(u8 disk)
 {
 	boot_disk = disk;
-	mem_map();
+	memory_map();
 	a20_enable();
 
 	vga_clear();
@@ -34,9 +34,9 @@ int start(u8 disk)
 
 	// acpi_probe(); // TODO: Fix slow ACPI probing
 	pci_probe();
-	dev_print();
+	device_print();
 
-	cfg_read();
+	config_read();
 	gui_draw();
 
 	// Sleep and wait for interrupts

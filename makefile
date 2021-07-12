@@ -34,7 +34,7 @@ all: dir $(BLD)/boot.bin mb1 mb2
 dir:
 	@mkdir -p $(BLD)/entry/
 	@mkdir -p $(BLD)/loader/fs/
-	@mkdir -p $(BLD)/loader/impl/
+	@mkdir -p $(BLD)/loader/protocols/
 
 mb1:
 	@$(MAKE) --no-print-directory -C example/$@

@@ -1,7 +1,7 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#ifndef DSK_H
-#define DSK_H
+#ifndef DISK_H
+#define DISK_H
 
 #include <def.h>
 
@@ -16,6 +16,6 @@ struct fs {
 	s32 (*read)(const char *, void *, u32, u32, struct dev *);
 };
 
-void dsk_detect(struct dev *dev);
+void disk_detect(struct dev *dev);
 
 #endif

@@ -55,9 +55,9 @@ void pic_install(void)
 	pic_wait();
 }
 
-void pic_ack(u32 int_no)
+void pic_ack(u32 interrupt_no)
 {
-	if (int_no >= 40)
+	if (interrupt_no >= 40)
 		outb(PIC2, 0x20);
 
 	outb(PIC1, 0x20);

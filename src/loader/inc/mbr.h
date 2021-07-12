@@ -4,7 +4,7 @@
 #define MBR_H
 
 #include <def.h>
-#include <dev.h>
+#include <device.h>
 
 struct mbr_entry {
 	u8 attributes;

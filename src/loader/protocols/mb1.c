@@ -2,16 +2,16 @@
 // Everything according to spec
 
 #include <elf.h>
-#include <impl/mb1.h>
-#include <lib.h>
-#include <mem.h>
-#include <pnc.h>
+#include <library.h>
+#include <memory.h>
+#include <panic.h>
+#include <protocols/mb1.h>
 
 // The address where data gets stored
-#define MB1_LOAD_ADDRESS 0x10000
+#define MB1_LOAD_ADDRESS 0x20000
 
 #define MB1_FLAG_PAGE_ALIGN (1 << 0) // Align modules with page boundaries (4K)
-#define MB1_FLAG_MEMORY_INFO (1 << 1) // Load/store all mem_* fields and mmap_* structs
+#define MB1_FLAG_MEMORY_INFO (1 << 1) // Load/store all memory_* fields and mmap_* structs
 #define MB1_FLAG_VIDEO_MODE (1 << 2) // Load/store video mode table
 #define MB1_FLAG_MANUAL_ADDRESSES (1 << 16) // Use specified load addresses
 
@@ -36,7 +36,7 @@ static u32 mb1_checksum(struct mb1_entry *entry)
 	return -(entry->magic + entry->flags);
 }
 
-// Load data into memory and return address (not overlapping
+// Load data into memory and return address (not overlapping)
 static u32 mb1_store(void *data, u32 size)
 {
 	static u32 offset = 0;
@@ -47,17 +47,17 @@ static u32 mb1_store(void *data, u32 size)
 
 static void mb1_store_memory_info(struct mb1_info *info)
 {
-	// TODO: Store mem_lower and mem_upper
-	struct mem_map *mem_map = mem_map_get();
-	info->flags |= MB1_INFO_MEM_MAP;
-	info->mmap_length = mem_map->count * sizeof(struct mb1_mmap_entry);
+	// TODO: Store memory_lower and memory_upper
+	struct memory_map *memory_map = memory_map_get();
+	info->flags |= MB1_INFO_MEMORY_MAP;
+	info->mmap_length = memory_map->count * sizeof(struct mb1_mmap_entry);
 	info->mmap_addr = mb1_store(NULL, 0);
-	for (u32 i = 0; i < mem_map->count; i++) {
-		struct mb1_mmap_entry mmap_entry;
+	for (u32 i = 0; i < memory_map->count; i++) {
+		struct mb1_mmap_entry mmap_entry = { 0 };
 		mmap_entry.struct_size = sizeof(mmap_entry) - 4;
-		mmap_entry.addr_low = mem_map->entry[i].base;
-		mmap_entry.len_low = mem_map->entry[i].length;
-		mmap_entry.type = mem_map->entry[i].type;
+		mmap_entry.addr_low = memory_map->entry[i].base;
+		mmap_entry.len_low = memory_map->entry[i].length;
+		mmap_entry.type = memory_map->entry[i].type;
 		mb1_store(&mmap_entry, sizeof(mmap_entry));
 	}
 }
@@ -98,7 +98,7 @@ static void mb1_jump(u32 entry, u32 info)
 }
 
 // Detect and verify mb1
-u8 mb1_detect(struct cfg_entry *cfg)
+u8 mb1_detect(struct config_entry *cfg)
 {
 	u8 header[8192] = { 0 };
 
@@ -130,7 +130,7 @@ u8 mb1_detect(struct cfg_entry *cfg)
 }
 
 // Execute mb1 type kernel
-void mb1_exec(struct cfg_entry *cfg)
+void mb1_exec(struct config_entry *cfg)
 {
 	struct mb1_entry mb1_entry = { 0 };
 	s32 ret = cfg->dev->p.disk.fs.read(cfg->path, &mb1_entry, cfg->impl.offset,

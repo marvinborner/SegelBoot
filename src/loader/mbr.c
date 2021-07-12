@@ -1,17 +1,17 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#include <lib.h>
+#include <library.h>
 #include <log.h>
 #include <mbr.h>
-#include <pnc.h>
+#include <panic.h>
 
 static struct mbr_entry entries[16] = { 0 };
 
 static s32 mbr_read(void *buf, u32 lba, u32 sector_count, struct dev *part)
 {
-	u8 dev_id = (part->data & 0xff00) >> 8;
-	struct dev *dev = dev_get_by_id(dev_id);
-	assert(dev && dev->type == DEV_DISK && dev->read);
+	u8 device_id = (part->data & 0xff00) >> 8;
+	struct dev *dev = device_get_by_id(device_id);
+	assert(dev && dev->type == DEVICE_DISK && dev->read);
 
 	u8 mbr_id = part->data & 0xff;
 	assert(mbr_id < COUNT(entries));
@@ -30,7 +30,7 @@ static u8 mbr_add_entry(struct mbr_entry *entry)
 
 u8 mbr_detect(struct dev *dev)
 {
-	assert(dev->type == DEV_DISK);
+	assert(dev->type == DEVICE_DISK);
 
 	struct mbr mbr = { 0 };
 	dev->read(&mbr, 0, 1, dev); // Read first sector (MBR)
@@ -52,7 +52,7 @@ u8 mbr_detect(struct dev *dev)
 		// Saving space and everything
 		u16 data = mbr_add_entry(entry) | (dev->id << 8);
 
-		dev_register(DEV_DISK, name, data, mbr_read, NULL);
+		device_register(DEVICE_DISK, name, data, mbr_read, NULL);
 	}
 
 	return 1;

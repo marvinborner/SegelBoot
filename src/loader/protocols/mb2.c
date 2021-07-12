@@ -2,9 +2,9 @@
 // Everything according to spec
 
 #include <elf.h>
-#include <impl/mb2.h>
-#include <lib.h>
-#include <pnc.h>
+#include <protocols/mb2.h>
+#include <library.h>
+#include <panic.h>
 
 // The address where data gets stored
 #define MB2_LOAD_ADDRESS 0x10000
@@ -55,7 +55,7 @@ static void mb2_jump(u32 entry, u32 info)
 }
 
 // Detect and verify mb2
-u8 mb2_detect(struct cfg_entry *cfg)
+u8 mb2_detect(struct config_entry *cfg)
 {
 	u8 header[8192] = { 0 };
 
@@ -88,7 +88,7 @@ u8 mb2_detect(struct cfg_entry *cfg)
 }
 
 // Execute mb2 type kernel
-void mb2_exec(struct cfg_entry *cfg)
+void mb2_exec(struct config_entry *cfg)
 {
 	struct mb2_entry mb2_entry = { 0 };
 	s32 ret = cfg->dev->p.disk.fs.read(cfg->path, &mb2_entry, cfg->impl.offset,

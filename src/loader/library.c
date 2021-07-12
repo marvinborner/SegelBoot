@@ -1,6 +1,6 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#include <lib.h>
+#include <library.h>
 
 /**
  * Common string functions

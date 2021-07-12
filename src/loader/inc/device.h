@@ -1,20 +1,20 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#ifndef DEV_H
-#define DEV_H
+#ifndef DEVICE_H
+#define DEVICE_H
 
 #include <def.h>
-#include <dsk.h>
+#include <disk.h>
 
-enum dev_type {
-	DEV_NONE,
-	DEV_DISK,
-	DEV_FB,
+enum device_type {
+	DEVICE_NONE,
+	DEVICE_DISK,
+	DEVICE_FB,
 };
 
 struct dev {
 	u8 id;
-	enum dev_type type;
+	enum device_type type;
 	char name[16];
 
 	s32 (*read)(void *, u32, u32, struct dev *);
@@ -30,12 +30,12 @@ struct dev {
 	u32 data; // Optional (device-specific) data/information
 };
 
-struct dev *dev_get_by_id(u8 id);
-struct dev *dev_get_by_name(const char *name, u32 len);
-void dev_foreach(enum dev_type type, u8 (*cb)(struct dev *)); // cb=1 => break
-u8 dev_register(enum dev_type type, char *name, u32 data,
+struct dev *device_get_by_id(u8 id);
+struct dev *device_get_by_name(const char *name, u32 len);
+void device_foreach(enum device_type type, u8 (*cb)(struct dev *)); // cb=1 => break
+u8 device_register(enum device_type type, char *name, u32 data,
 		s32 (*read)(void *, u32, u32, struct dev *),
 		s32 (*write)(const void *, u32, u32, struct dev *));
-void dev_print(void);
+void device_print(void);
 
 #endif

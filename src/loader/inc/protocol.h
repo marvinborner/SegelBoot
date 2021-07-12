@@ -3,7 +3,7 @@
 #ifndef IMPL_H
 #define IMPL_H
 
-#include <dev.h>
+#include <device.h>
 
 enum impl_type {
 	IMPL_NONE,

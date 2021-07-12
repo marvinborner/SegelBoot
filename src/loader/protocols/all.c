@@ -1,11 +1,11 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#include <impl/all.h>
-#include <impl/mb1.h>
-#include <impl/mb2.h>
-#include <pnc.h>
+#include <protocols/all.h>
+#include <protocols/mb1.h>
+#include <protocols/mb2.h>
+#include <panic.h>
 
-u8 impl_detect(struct cfg_entry *cfg)
+u8 impl_detect(struct config_entry *cfg)
 {
 	if (mb1_detect(cfg))
 		return 1;
@@ -16,9 +16,9 @@ u8 impl_detect(struct cfg_entry *cfg)
 	return 0;
 }
 
-void impl_exec(struct cfg_entry *cfg)
+void impl_exec(struct config_entry *cfg)
 {
-	assert(cfg->dev->type == DEV_DISK);
+	assert(cfg->dev->type == DEVICE_DISK);
 
 	switch (cfg->impl.type) {
 	case IMPL_MB1:
