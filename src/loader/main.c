@@ -5,13 +5,13 @@
 #include <cfg.h>
 #include <def.h>
 #include <dev.h>
+#include <gui.h>
 #include <ide.h>
 #include <int.h>
 #include <log.h>
 #include <mem.h>
 #include <pci.h>
 #include <pic.h>
-#include <sel.h>
 
 /**
  * Entry
@@ -37,7 +37,7 @@ int start(u8 disk)
 	dev_print();
 
 	cfg_read();
-	sel_draw();
+	gui_draw();
 
 	// Sleep and wait for interrupts
 	__asm__ volatile("sti");

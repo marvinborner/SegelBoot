@@ -1,8 +1,8 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
-#ifndef SEL_H
-#define SEL_H
+#ifndef GUI_H
+#define GUI_H
 
-void sel_draw(void);
+void gui_draw(void);
 
 #endif
