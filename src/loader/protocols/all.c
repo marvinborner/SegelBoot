@@ -1,9 +1,9 @@
 // MIT License, Copyright (c) 2021 Marvin Borner
 
+#include <panic.h>
 #include <protocols/all.h>
 #include <protocols/mb1.h>
 #include <protocols/mb2.h>
-#include <panic.h>
 
 u8 impl_detect(struct config_entry *cfg)
 {

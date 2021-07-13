@@ -19,7 +19,7 @@ build_cross() {
             echo -n "Do you want to compile a cross compiler (this can take around 20 minutes)? [yn] "
             read -r answer
             if ! [ "$answer" != "${answer#[Yy]}" ]; then
-                echo "The compilation of melvix requires a cross compiler!"
+                echo "The compilation of SegelBoot requires a cross compiler!"
                 exit 1
             fi
         fi
@@ -99,8 +99,8 @@ build() {
     $SUDO cp example/segelboot.cfg mnt/boot/
     $SUDO cp build/examples/* mnt/boot/
 
-    $SUDO cp -r "$HOME"/code/melvix/disk/* mnt/ || true
-    $SUDO cp -r "$HOME"/code/melvix/build/apps/ mnt/apps/ || true
+    #$SUDO cp -r "$HOME"/code/melvix/disk/* mnt/ || true
+    #$SUDO cp -r "$HOME"/code/melvix/build/apps/ mnt/apps/ || true
 
     $SUDO umount mnt/ || (sync && $SUDO umount mnt/)
     rm -rf mnt/

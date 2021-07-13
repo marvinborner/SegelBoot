@@ -51,8 +51,8 @@ void device_foreach(enum device_type type, u8 (*cb)(struct dev *))
 }
 
 u8 device_register(enum device_type type, char *name, u32 data,
-		s32 (*read)(void *, u32, u32, struct dev *),
-		s32 (*write)(const void *, u32, u32, struct dev *))
+		   s32 (*read)(void *, u32, u32, struct dev *),
+		   s32 (*write)(const void *, u32, u32, struct dev *))
 {
 	static u8 id = 0;
 	assert(++id < 0xff);
@@ -79,6 +79,7 @@ void device_print(void)
 		struct dev *dev = &devices[i];
 		if (!dev->id)
 			continue;
-		log("[DEV] %d: %s device: %s\n", dev->id, device_resolve_type(dev->type), dev->name);
+		log("[DEV] %d: %s device: %s\n", dev->id, device_resolve_type(dev->type),
+		    dev->name);
 	}
 }

@@ -32,7 +32,6 @@ int start(u8 disk)
 	pic_install();
 	idt_install();
 
-	// acpi_probe(); // TODO: Fix slow ACPI probing
 	pci_probe();
 	device_print();
 

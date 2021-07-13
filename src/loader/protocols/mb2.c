@@ -2,9 +2,9 @@
 // Everything according to spec
 
 #include <elf.h>
-#include <protocols/mb2.h>
 #include <library.h>
 #include <panic.h>
+#include <protocols/mb2.h>
 
 // The address where data gets stored
 #define MB2_LOAD_ADDRESS 0x10000

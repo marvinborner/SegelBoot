@@ -2,8 +2,8 @@
 
 #include <interrupt.h>
 #include <log.h>
-#include <pic.h>
 #include <panic.h>
+#include <pic.h>
 
 /**
  * IDT
@@ -11,10 +11,12 @@
 
 extern u32 interrupt_table[];
 static struct idt_entry idt_entries[256] = { 0 };
-REAL static struct idt_ptr idt = { .size = sizeof(idt_entries) - 1, .base = idt_entries };
+static struct idt_ptr idt = { .size = sizeof(idt_entries) - 1, .base = idt_entries };
 
 void idt_install(void)
 {
+	// Initialize IDT using handler offset, segment and type
+
 	for (u8 i = 0; i < 3; i++)
 		idt_entries[i] = IDT_ENTRY(interrupt_table[i], 0x18, INTERRUPT_GATE);
 
@@ -82,8 +84,8 @@ static void interrupt_trap_handler(struct interrupt_frame *frame)
 			__asm__ volatile("cli\nhlt");
 	}
 
-	log("%s Exception (code %x) at 0x%x!\n", interrupt_trap_names[frame->interrupt_no], frame->err_code,
-	    frame->eip);
+	log("%s Exception (code %x) at 0x%x!\n", interrupt_trap_names[frame->interrupt_no],
+	    frame->err_code, frame->eip);
 
 	while (1)
 		__asm__ volatile("cli\nhlt");

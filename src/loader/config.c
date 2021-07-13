@@ -2,10 +2,10 @@
 
 #include <config.h>
 #include <device.h>
-#include <protocols/all.h>
 #include <library.h>
 #include <log.h>
 #include <panic.h>
+#include <protocols/all.h>
 
 // Keys
 #define TIMEOUT "TIMEOUT"
