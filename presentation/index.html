@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+
+        <title>reveal.js</title>
+
+        <link rel="stylesheet" href="dist/reset.css" />
+        <link rel="stylesheet" href="dist/reveal.css" />
+
+        <link rel="stylesheet" href="dist/theme/white.css" />
+
+        <!-- Theme used for syntax highlighted code -->
+        <link rel="stylesheet" href="plugin/highlight/highlight.css" />
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h2>x86 Bootloader</h2>
+                    <small>CT, Marvin Borner, TGI13.1</small>
+                    <aside class="notes">
+                        <ul>
+                            <li>Ich lass einiges aus, weil großes Projekt</li>
+                            <li>Ansonsten nachher fragen</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>Inhalt</h2>
+                    <ul>
+                        <li>Was ist/macht ein Bootloader?</li>
+                        <li>Boot-Ablauf</li>
+                        <li>Umsetzung</li>
+                        <li>Protokolle</li>
+                        <li>x86-Architektur</li>
+                        <li>Code</li>
+                        <li>Demo</li>
+                        <li>Fazit</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Was ist ein Bootloader?</h2>
+                        <p class="fragment">Bindeglied in Boot-Prozess</p>
+                        <img
+                            class="fragment"
+                            src="img/process.png"
+                            alt="Boot-Prozess Beispiel (Legacy)"
+                        />
+                        <aside class="notes">
+                            <ul>
+                                <li>
+                                    Nur Legacy Boot behandelt (kein UEFI, GPT,
+                                    ...)
+                                </li>
+                                <li>
+                                    Generell: MBR lädt Bootloader, Bootloader
+                                    lädt Kernel
+                                </li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>Was macht ein Bootloader?</h2>
+                        <ul>
+                            <li class="fragment">
+                                Initialisiert CPU, GPU, I/O
+                            </li>
+                            <li class="fragment">
+                                Simple Treiber (Festplatte, Grafik)
+                            </li>
+                            <li class="fragment">
+                                Häufig GUI zur Auswahl und Konfiguration
+                            </li>
+                            <li class="fragment">Sucht nach Hardware-Infos</li>
+                            <li class="fragment">
+                                Lädt gewählten Kernel mit Infos
+                            </li>
+                        </ul>
+                    </section>
+                </section>
+
+                <section>
+                    <!-- boot sequence osdev -->
+                    <h2 style="position: relative; top: 100px">Ablauf</h2>
+                    <section>
+                        <p>
+                            <b>B</b>asic <b>I</b>nput <b>O</b>utput
+                            <b>S</b>ystem
+                        </p>
+                        <ul>
+                            <li class="fragment">Hardware Initialisierung</li>
+                            <li class="fragment">
+                                Stellt BIOS interrupts zur Verfügung
+                            </li>
+                        </ul>
+                        <aside class="notes">
+                            <ul>
+                                <li>
+                                    LEGACY: Kommt aus 80ern, trotzdem noch
+                                    überall vertreten (-> UEFI)
+                                </li>
+                                <li>
+                                    Power Button wird gedrückt - hardcoded jump
+                                    zu BIOS
+                                </li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <p><b>P</b>ower <b>O</b>n <b>S</b>elf <b>T</b>est</p>
+                        <ul>
+                            <li class="fragment">Diagnose</li>
+                            <li class="fragment">Bootbares Gerät?</li>
+                        </ul>
+                        <aside class="notes">
+                            <ul>
+                                <li>Gehört eigtl. noch zu BIOS</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <p><b>M</b>aster <b>B</b>oot <b>R</b>ecord</p>
+                        <ul>
+                            <li class="fragment">512B :O</li>
+                            <li class="fragment">Magic <code>0xAA55</code></li>
+                            <li class="fragment">
+                                Von BIOS zu <code>0x7C00</code>
+                            </li>
+                            <li class="fragment">
+                                Bei Festplatten: Partitionstabelle @445
+                            </li>
+                            <!-- Implementationsabhängig! -->
+                            <b class="fragment">
+                                &rarr; Rest ist implementationsabhängig
+                            </b>
+                        </ul>
+                        <aside class="notes">
+                            <ul>
+                                <li>Also eigentlich nur 446B</li>
+                                <li>
+                                    Bei 0x7C00 aus historischen Gründen; 1KiB
+                                    entfernt von 32KiB; erster 86-PC hatte 32KiB
+                                    RAM; 0x0-0x7C00 für OS)
+                                </li>
+                            </ul>
+                        </aside>
+                    </section>
+                </section>
+
+                <!--<section>
+                    <h2 style="position: relative; top: 100px">Arten</h2>
+                    <section>
+                        <h4>Krasser Code-Golfer</h4>
+                        <p class="fragment">Komplett in MBR (512B bzw. 446B)</p>
+                        <p class="fragment">Nachteil: Nahezu unmöglich</p>
+                        <p class="fragment">Ggf. für embedded Systeme</p>
+                    </section>
+                    <section>
+                        <h4>Single-Stage</h4>
+                        <p class="fragment">
+                            Nur kleiner Kernel-loader in MBR, keine
+                            Initialisierung
+                        </p>
+                        <p class="fragment">Kernel macht den Rest</p>
+                        <p class="fragment">
+                            Nachteil: Nicht mit allen Kernels kompatibel
+                        </p>
+                    </section>
+                    <section>
+                        <h4>Multi-Stage</h4>
+                        <p class="fragment">MBR lädt nur zweite Stage</p>
+                        <p class="fragment">Ggf. noch mehr Stages</p>
+                        <p class="fragment">Meine Wahl: Dual-Stage</p>
+                    </section>
+                </section>-->
+
+                <section>
+                    <h2 style="position: relative; top: 80px">Umsetzung</h2>
+                    <section>
+                        <img
+                            src="img/disk.svg"
+                            width="400"
+                            alt="Festplatte"
+                            style="position: relative; top: 70px"
+                        />
+                        <aside class="notes">
+                            <ul>
+                                <li>Dual-Stage</li>
+                                <li>64. Sektor = 64 * 512 = 0x8000 = 32768</li>
+                                <li>1. Stage == Bootsektor</li>
+                                <li>2. Stage == Loader</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h4>1. Stage: MBR; <code>0x7C00-0x7E00</code></h4>
+                        <ul>
+                            <li class="fragment">Generelle Diagnose</li>
+                            <li class="fragment">
+                                <!-- Bits beziehen sich auf Adressierung, Register sind dennoch nutzbar -->
+                                CPU von <b>Real</b> (16 Bit) zu
+                                <b>Protected</b> mode (32 Bit)
+                                <!-- Long mode -->
+                            </li>
+                            <li class="fragment">
+                                Lädt 2. Stage von boot disk
+                            </li>
+                        </ul>
+                        <aside class="notes">
+                            <ul>
+                                <li>
+                                    Boot disk wird von BIOS weitergegeben (in dl
+                                    Reg)
+                                </li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h4>2. Stage: <code>0x7E00-0xFC00</code> (~32KiB)</h4>
+                        <ul>
+                            <li class="fragment">
+                                Diagnose (memory, disk, ...)
+                            </li>
+                            <li class="fragment">
+                                Initialisierung (A20, GDT, IDT, Register, ...)
+                            </li>
+                            <li class="fragment">
+                                Partition und Festplatte suchen
+                            </li>
+                            <li class="fragment">
+                                Dateisystem erkennen und konfigurieren
+                            </li>
+                            <li class="fragment">
+                                GUI für Auswahl mittels config Datei
+                            </li>
+                            <li class="fragment">Kernel laden</li>
+                        </ul>
+                        <aside class="notes">
+                            <ul>
+                                <li>
+                                    0xFC00 wegen Partitionstart in 64. Sektor
+                                    (0x8000 -> 0x7C00 + 0x8000 = 0xFC00)
+                                </li>
+                                <li>Ggf. config zeigen</li>
+                            </ul>
+                        </aside>
+                    </section>
+                </section>
+
+                <section>
+                    <h2>Protokolle</h2>
+                    <ul>
+                        <li class="fragment">Multiboot 1/2</li>
+                        <li class="fragment">Linux, Windows, Mac OS</li>
+                    </ul>
+                    <aside class="notes">
+                        <ul>
+                            <li>Protokolle für Datenweitergabe an Kernel</li>
+                            <li>MB unterstützt sehr viele Betriebssysteme</li>
+                            <li>MB1 komplett, MB2 nur so bisschen</li>
+                            <li>OS-spezifisch häufig sehr komplex</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <!-- <section> -->
+                <!--     <h2>Relokation</h2> -->
+                <!--     <ul> -->
+                <!--         <li class="fragment"> -->
+                <!--             MBR (<code>0x7C00</code>) zu z.B. -->
+                <!--             <code>0x0600</code> -->
+                <!--         </li> -->
+                <!--         <li class="fragment"> -->
+                <!--             Etwas anderes (Kernel, anderen Bootloader) zu -->
+                <!--             <code>0x7C00</code> -->
+                <!--         </li> -->
+                <!--         <li class="fragment"> -->
+                <!--             Vorteil: Mehr Platz (~30KiB), eindeutige Adresse, -->
+                <!--             mehrere Bootloader chainloaden -->
+                <!--         </li> -->
+                <!--         <li class="fragment">z.B. Windows Boot</li> -->
+                <!--     </ul> -->
+                <!-- </section> -->
+
+                <section>
+                    <h2>x86-Architektur</h2>
+                    <section>
+                        <h4>Grundlegende Register</h4>
+                        <table style="font-size: 70%">
+                            <tbody>
+                                <tr>
+                                    <th>64bit</th>
+                                    <th>32bit</th>
+                                    <th>16bit</th>
+                                    <th>8bit-h</th>
+                                    <th>8bit-l</th>
+                                    <th>Verwendung</th>
+                                </tr>
+                                <tr>
+                                    <td>rax</td>
+                                    <td>eax</td>
+                                    <td>ax</td>
+                                    <td>ah</td>
+                                    <td>al</td>
+                                    <td>Accumulator</td>
+                                </tr>
+                                <tr>
+                                    <td>rbx</td>
+                                    <td>ebx</td>
+                                    <td>bx</td>
+                                    <td>bh</td>
+                                    <td>bl</td>
+                                    <td>Base</td>
+                                </tr>
+                                <tr>
+                                    <td>rcx</td>
+                                    <td>ecx</td>
+                                    <td>cx</td>
+                                    <td>ch</td>
+                                    <td>cl</td>
+                                    <td>Counter</td>
+                                </tr>
+                                <tr>
+                                    <td>rdx</td>
+                                    <td>edx</td>
+                                    <td>dx</td>
+                                    <td>dh</td>
+                                    <td>dl</td>
+                                    <!-- Disk id -->
+                                    <td>Data</td>
+                                </tr>
+                                <tr>
+                                    <td>rbp</td>
+                                    <td>ebp</td>
+                                    <td>bp</td>
+                                    <td>/</td>
+                                    <td>/</td>
+                                    <td>Base pointer</td>
+                                </tr>
+                                <tr>
+                                    <td>rsp</td>
+                                    <td>esp</td>
+                                    <td>sp</td>
+                                    <td>/</td>
+                                    <td>/</td>
+                                    <td>Stack pointer</td>
+                                </tr>
+                                <tr>
+                                    <td>rip</td>
+                                    <td>eip</td>
+                                    <td>ip</td>
+                                    <td>/</td>
+                                    <td>/</td>
+                                    <td>Instruction pointer</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <aside class="notes">
+                            <b>Eigentlich wie 8051 ASM</b>
+                            <ul>
+                                <li>A: Arith, I/O, ...</li>
+                                <li>B: Base pointer für memory access</li>
+                                <li>C: Loop counter</li>
+                                <li>D: Eigentlich alles</li>
+                                <li>---</li>
+                                <li>SP: dec/inc je push/pop</li>
+                                <li>BP: Frame pointer - Prolog</li>
+                                <li>---</li>
+                                <li>
+                                    IP: Wie PC (wird auf SP als return address
+                                    gepusht)
+                                </li>
+                            </ul>
+                        </aside>
+                    </section>
+                </section>
+
+                <section>
+                    <h2>Sprachen</h2>
+                    <ul>
+                        <li class="fragment">
+                            ASM in MBR: Kann direkt mit Registern umgehen, kein
+                            Bootstrapping/Overhead
+                        </li>
+                        <li class="fragment">
+                            C in 2. Stage: Lowlevel (<code>__asm__</code>,
+                            <code>*(u8*)0x7E00</code>), kein Interpreter
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <section data-transition="fade-out">
+                        <h2>1. Stage (MBR)</h2>
+                        <pre><code class="fragment" data-line-numbers data-trim>
+org 0x7C00
+bits 16
+mbr:
+    ; Register leeren (manche BIOS sind komisch)
+    xor bx, bx
+    mov ds, bx
+    mov es, bx
+    mov ss, bx
+    ; Manche Register sind wichtig (z.B. dl mit boot disk)
+
+    mov sp, 0x7C00 ; Stack: 0x7C00 -> wächst nach unten
+
+    ; Text mode VGA mit BIOS interrupts leeren
+    mov ax, SCREEN_CLEAR
+    int SCREEN_INT
+
+    call disk_support ; Ist disk unterstützt?
+
+    jmp load_stage ; 2. Stage laden und ausführen
+                        </code></pre>
+                        <aside class="notes">
+                            <ul>
+                                <li>Nicht alles, nur Ausschnitte</li>
+                                <li>VGA = Video Graphics Array</li>
+                            </ul>
+                        </aside>
+                    </section>
+
+                    <section data-transition="fade">
+                        <pre
+                            style="font-size: 13pt"
+                        ><code data-line-numbers data-trim>
+bits 16
+load_stage:
+    mov bx, loader
+    mov [dap.dest], bx
+    call disk_read ; Nutzt dap, dl und BIOS INTs
+
+    lgdt [gdt] ; Lade GDT
+
+    ; Protected mode (32-Bit)
+    mov eax, cr0
+    or ax, 1 ; PE (Protection Enable) Bit
+    mov cr0, eax
+
+    ; 0x08 GDT offset -> 1. Eintrag -> Code segment (cs)
+    jmp 0x08:protected
+
+bits 32
+protected:
+    ; Segment register auf 2. GDT Eintrag (non-executable)
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    push dx ; Disk (in dl) zu kernel pushen
+    call loader ; Zweite Stage!
+
+[...]
+dw 0xAA55 ; MBR magic
+loader: incbin "build/loader.bin" ; 2. Stage (C)
+                        </code></pre>
+                        <aside class="notes">
+                            <ul>
+                                <li>GDT entry ist 8 Byte</li>
+                            </ul>
+                        </aside>
+                    </section>
+
+                    <!--<section>
+                        <pre><code class="c" data-line-numbers data-trim>
+static u8 boot_disk = 0;
+int start(u8 disk)
+{
+    boot_disk = disk;
+
+    memory_map();
+    a20_enable();
+
+    vga_clear();
+    serial_install();
+
+    pic_install();
+    idt_install();
+
+    pci_probe();
+
+    config_read();
+    gui_draw();
+
+    return 0;
+}
+                        </code></pre>
+                    </section>-->
+
+                    <section data-background="img/uml4.png">
+                        <!-- <img -->
+                        <!--     style=" -->
+                        <!--         height: auto; -->
+                        <!--         width: 105%; -->
+                        <!--         left: -20px; -->
+                        <!--         position: relative; -->
+                        <!--         max-width: unset; -->
+                        <!--         max-height: unset; -->
+                        <!--     " -->
+                        <!--     src="img/uml3.png" -->
+                        <!--     alt="UML-Diagramm" -->
+                        <!-- /> -->
+                        <aside class="notes">
+                            <ul>
+                                <li>PIC = Programmable Interrupt Controller</li>
+                                <li>
+                                    PCI = Peripheral Component Interconnect
+                                    (bus)
+                                </li>
+                                <li>VGA = Video Graphics Array</li>
+                                <li>IDE = Integrated Drive Electronics</li>
+                                <li>ELF = Executable and Linkable Format</li>
+                                <li>
+                                    A20 = Damit alle 32 Adressierungsleitungen
+                                    verwendet werden können (Sonst nur 2^20 =
+                                    1MiB adressierbar)
+                                </li>
+                            </ul>
+                        </aside>
+                    </section>
+
+                    <section data-background="img/uml3.png"></section>
+                </section>
+
+                <section><h2>Demo</h2></section>
+
+                <section>
+                    <h2>Fazit</h2>
+                    <ul>
+                        <li class="fragment">
+                            Schwierig jede Hardware zu unterstützen
+                        </li>
+                        <li class="fragment">Lieber GRUB/...</li>
+                    </ul>
+                    <aside class="notes">
+                        <ul>
+                            <li>Interessant</li>
+                            <li>UEFI, PCIE, SATA, USB, XHCI, ...</li>
+                            <li>Lieber GRUB für Kompatibilität</li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>Fragen?</h2>
+                    <ul class="fragment">
+                        <li>Segmentation, GDT</li>
+                        <li>Interrupts, IDT, PIC</li>
+                        <li>Multiboot 1/2</li>
+                        <li>Mehr Code-Beispiele</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Quellen</h2>
+                    <section>
+                        <p>Bilder</p>
+                        <br />
+                        <ul>
+                            <li>
+                                https://en.wikipedia.org/wiki/BIOS#/media/File:Legacy_BIOS_boot_process.png
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <p>Informationen (aufgerufen 13.07.2021)</p>
+                        <br />
+                        <ul>
+                            <li>https://en.wikipedia.org/wiki/Bootloader</li>
+                            <li>https://en.wikipedia.org/wiki/BIOS</li>
+                            <li>https://wiki.osdev.org/</li>
+                            <li>https://github.com/marvinborner/Melvix</li>
+                            <li>
+                                Intel 64 and IA-32 Architectures Software
+                                Developer's Manual
+                            </li>
+                        </ul>
+                    </section>
+                </section>
+            </div>
+        </div>
+
+        <script src="dist/reveal.js"></script>
+        <script src="plugin/notes/notes.js"></script>
+        <script src="plugin/markdown/markdown.js"></script>
+        <script src="plugin/highlight/highlight.js"></script>
+        <script>
+            Reveal.initialize({
+                hash: true,
+                controls: false,
+
+                dependencies: [
+                    {
+                        src: "plugin/cursor/cursor.js",
+                        async: true,
+                    },
+                ],
+
+                // Learn about plugins: https://revealjs.com/plugins/
+                plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+            });
+        </script>
+    </body>
+</html>
